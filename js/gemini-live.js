@@ -94,12 +94,16 @@
       ws.send(JSON.stringify(setup));
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
       try {
-        const msg = JSON.parse(event.data);
+        // 處理可能收到的 Blob 或 string
+        const text = (event.data instanceof Blob)
+          ? await event.data.text()
+          : event.data;
+        const msg = JSON.parse(text);
         handleServerMessage(msg);
       } catch (e) {
-        console.warn('[Gemini Live] 無法解析訊息:', e, event.data?.substring?.(0, 200));
+        console.warn('[Gemini Live] 無法解析訊息:', e);
       }
     };
 
