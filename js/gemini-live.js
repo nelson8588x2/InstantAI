@@ -239,7 +239,7 @@
 
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { sampleRate: SAMPLE_RATE, channelCount: 1, echoCancellation: true }
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
       });
     } catch (e) {
       setStatus('無法存取麥克風');
@@ -248,7 +248,9 @@
     }
 
     if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+      // 使用瀏覽器原生取樣率（通常 48kHz），避免 Chrome 在非原生取樣率下 MediaStreamSource 輸出全零
+      // pcm-processor.js 會負責降採樣到 16kHz
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
     // 確保 AudioContext 是 running 狀態
     if (audioContext.state === 'suspended') {
