@@ -278,6 +278,33 @@
     source.connect(workletNode);
     workletNode.connect(audioContext.destination);
 
+    // 診斷：檢查 MediaStream track 和 AudioContext 狀態
+    const track = mediaStream.getAudioTracks()[0];
+    console.log(`[Gemini Live] Track: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}, label=${track.label}`);
+    console.log(`[Gemini Live] AudioContext: state=${audioContext.state}, sampleRate=${audioContext.sampleRate}`);
+    const settings = track.getSettings();
+    console.log(`[Gemini Live] Track settings:`, JSON.stringify(settings));
+
+    // 診斷：用 AnalyserNode 直接檢測原始音訊能量
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+    const diagBuf = new Float32Array(analyser.fftSize);
+    let diagCount = 0;
+    const diagInterval = setInterval(() => {
+      analyser.getFloatTimeDomainData(diagBuf);
+      let maxVal = 0;
+      for (let i = 0; i < diagBuf.length; i++) {
+        const v = Math.abs(diagBuf[i]);
+        if (v > maxVal) maxVal = v;
+      }
+      diagCount++;
+      if (diagCount <= 10 || diagCount % 30 === 0) {
+        console.log(`[Gemini Live] Analyser peak=${maxVal.toFixed(6)}, ctx.state=${audioContext.state}`);
+      }
+      if (diagCount >= 60) clearInterval(diagInterval);
+    }, 500);
+
     isRecording = true;
     console.log(`[Gemini Live] 錄音已啟動, AudioContext sampleRate=${audioContext.sampleRate}`);
 
