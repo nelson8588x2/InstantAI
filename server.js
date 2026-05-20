@@ -101,8 +101,10 @@ wss.on('connection', (clientWs) => {
     let preview;
     try {
       const parsed = JSON.parse(str);
-      if (parsed.realtimeInput) {
-        preview = `realtimeInput (audio chunk ${str.length} bytes)`;
+      if (parsed.realtimeInput?.mediaChunks) {
+        preview = `realtimeInput/mediaChunks (audio ${str.length} bytes)`;
+      } else if (parsed.realtimeInput) {
+        preview = `realtimeInput (${str.length} bytes)`;
       } else if (parsed.setup) {
         preview = `setup: model=${parsed.setup.model}`;
       } else {

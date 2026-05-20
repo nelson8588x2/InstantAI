@@ -296,10 +296,10 @@
       if (ws && ws.readyState === WebSocket.OPEN) {
         const payload = JSON.stringify({
           realtimeInput: {
-            audio: {
+            mediaChunks: [{
               mimeType: 'audio/pcm;rate=' + SAMPLE_RATE,
               data: b64
-            }
+            }]
           }
         });
         ws.send(payload);
