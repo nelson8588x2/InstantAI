@@ -90,7 +90,18 @@
               }
             }
           },
-          tools: [{ googleSearch: {} }]
+          tools: [{ googleSearch: {} }],
+          realtimeInputConfig: {
+            automaticActivityDetection: {
+              disabled: false,
+              startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
+              endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
+              prefixPaddingMs: 100,
+              silenceDurationMs: 500
+            },
+            activityHandling: 'START_OF_ACTIVITY_INTERRUPTS',
+            turnCoverage: 'TURN_INCLUDES_ONLY_ACTIVITY'
+          }
         }
       };
       const setupStr = JSON.stringify(setup);
