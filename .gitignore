@@ -10,5 +10,5 @@ js/config.js
 Thumbs.db
 .DS_Store
 
-# Node（若未來有用到）
+# Node
 node_modules/

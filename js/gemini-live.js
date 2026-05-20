@@ -10,7 +10,8 @@
      設定常數
      ============================ */
   const MODEL = 'models/gemini-2.5-flash-native-audio-latest';
-  const WS_URL = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
+  // 透過後端 WebSocket 代理連線（API Key 安全存放於伺服器端）
+  const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/gemini-live';
   const SAMPLE_RATE = 16000;       // 麥克風輸入取樣率
   const OUTPUT_SAMPLE_RATE = 24000; // Gemini 輸出取樣率
   const CHUNK_INTERVAL_MS = 200;    // 每 200ms 送出一次音訊 chunk
@@ -41,29 +42,11 @@
   const statusEl = document.getElementById('s4-status');
 
   /* ============================
-     API Key（從 js/config.js 讀取）
-     ============================ */
-  function getApiKey() {
-    const key = window.APP_CONFIG && window.APP_CONFIG.GEMINI_API_KEY;
-    if (!key || key === 'YOUR_API_KEY_HERE') {
-      console.error('[Gemini Live] 請在 js/config.js 設定 GEMINI_API_KEY');
-      return null;
-    }
-    return key;
-  }
-
-  /* ============================
-     WebSocket 連接
+     WebSocket 連接（透過後端代理）
      ============================ */
   function connect() {
-    const key = getApiKey();
-    if (!key) {
-      setStatus('需要 API Key');
-      return;
-    }
-
     setStatus('連線中...');
-    ws = new WebSocket(`${WS_URL}?key=${key}`);
+    ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
       // 送出 setup 訊息
