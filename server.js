@@ -82,40 +82,46 @@ wss.on('connection', (clientWs) => {
   let geminiMsgCount = 0;
   let clientMsgCount = 0;
 
-  // Gemini → Client
-  geminiWs.on('message', (data) => {
+  // Gemini → Client（直接轉發原始資料，保持 frame 類型）
+  geminiWs.on('message', (data, isBinary) => {
     geminiMsgCount++;
-    const str = data.toString();
-    const preview = str.substring(0, 200);
-    console.log(`[Proxy] Gemini→Client #${geminiMsgCount} (${str.length} bytes): ${preview}`);
+    if (geminiMsgCount <= 5 || geminiMsgCount % 50 === 0) {
+      const preview = isBinary
+        ? `[binary ${data.length} bytes]`
+        : data.toString().substring(0, 200);
+      console.log(`[Proxy] Gemini→Client #${geminiMsgCount}: ${preview}`);
+    }
     if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(str);
+      clientWs.send(data, { binary: isBinary });
     }
   });
 
-  // Client → Gemini
-  clientWs.on('message', (data) => {
+  // Client → Gemini（直接轉發原始資料，保持 frame 類型）
+  clientWs.on('message', (data, isBinary) => {
     clientMsgCount++;
-    const str = data.toString();
-    // 音訊資料太長只顯示類型
-    let preview;
-    try {
-      const parsed = JSON.parse(str);
-      if (parsed.realtimeInput?.mediaChunks) {
-        preview = `realtimeInput/mediaChunks (audio ${str.length} bytes)`;
-      } else if (parsed.realtimeInput) {
-        preview = `realtimeInput (${str.length} bytes)`;
-      } else if (parsed.setup) {
-        preview = `setup: model=${parsed.setup.model}`;
+    if (clientMsgCount <= 3 || clientMsgCount % 50 === 0) {
+      let preview;
+      if (isBinary) {
+        preview = `[binary ${data.length} bytes]`;
       } else {
-        preview = str.substring(0, 200);
+        const str = data.toString();
+        try {
+          const parsed = JSON.parse(str);
+          if (parsed.realtimeInput?.audio) {
+            preview = `realtimeInput/audio (${str.length} bytes)`;
+          } else if (parsed.setup) {
+            preview = `setup: model=${parsed.setup.model}`;
+          } else {
+            preview = str.substring(0, 200);
+          }
+        } catch {
+          preview = str.substring(0, 100);
+        }
       }
-    } catch {
-      preview = str.substring(0, 200);
+      console.log(`[Proxy] Client→Gemini #${clientMsgCount}: ${preview}`);
     }
-    console.log(`[Proxy] Client→Gemini #${clientMsgCount}: ${preview}`);
     if (geminiWs.readyState === WebSocket.OPEN) {
-      geminiWs.send(str);
+      geminiWs.send(data, { binary: isBinary });
     } else {
       console.warn(`[Proxy] Gemini WS 未就緒 (state=${geminiWs.readyState}), 丟棄訊息`);
     }
