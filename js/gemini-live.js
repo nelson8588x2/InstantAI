@@ -34,21 +34,10 @@
   let sendBuffer = [];          // 累積的錄音 buffer
   let sendIntervalId = null;
   let micPermissionGranted = false;
-  let clientMsgCount = 0;
 
   // 光暈控制回調（由外部設定）
   let onAiSpeakingStart = null;
   let onAiSpeakingEnd = null;
-
-  /* ============================
-     裝置變更監聽（耳機插拔）
-     ============================ */
-  navigator.mediaDevices.addEventListener('devicechange', async () => {
-    console.log('[Gemini Live] 偵測到音訊裝置變更（耳機插拔）');
-    if (isRecording && isConnected) {
-      await restartMicStream();
-    }
-  });
 
   /* ============================
      DOM 元素
@@ -252,49 +241,6 @@
   }
 
   /* ============================
-     取得可用麥克風（自動跳過 muted 的裝置）
-     ============================ */
-  async function getWorkingMic() {
-    const constraints = { audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } };
-
-    // 先嘗試預設麥克風
-    let stream = await navigator.mediaDevices.getUserMedia(constraints);
-    let track = stream.getAudioTracks()[0];
-    console.log(`[Gemini Live] 預設麥克風: ${track.label}, muted=${track.muted}`);
-
-    if (!track.muted) return stream;
-
-    // 預設麥克風 muted（可能是 USB DAC 沒有 mic），嘗試其他裝置
-    console.log('[Gemini Live] 預設麥克風 muted，嘗試其他裝置...');
-    stream.getTracks().forEach(t => t.stop());
-
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const audioInputs = devices.filter(d => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
-    console.log(`[Gemini Live] 可用麥克風裝置: ${audioInputs.map(d => d.label).join(', ')}`);
-
-    for (const device of audioInputs) {
-      try {
-        const altStream = await navigator.mediaDevices.getUserMedia({
-          audio: { deviceId: { exact: device.deviceId }, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-        });
-        const altTrack = altStream.getAudioTracks()[0];
-        console.log(`[Gemini Live] 嘗試: ${altTrack.label}, muted=${altTrack.muted}`);
-        if (!altTrack.muted) {
-          console.log(`[Gemini Live] 使用替代麥克風: ${altTrack.label}`);
-          return altStream;
-        }
-        altStream.getTracks().forEach(t => t.stop());
-      } catch (e) {
-        console.warn(`[Gemini Live] 裝置 ${device.label} 無法使用:`, e);
-      }
-    }
-
-    // 都不行，返回預設的（至少有 stream 物件）
-    console.warn('[Gemini Live] 所有麥克風都 muted，使用預設');
-    return await navigator.mediaDevices.getUserMedia(constraints);
-  }
-
-  /* ============================
      自動開始串流錄音（連線成功後呼叫）
      使用 AudioWorkletNode 取代已棄用的 ScriptProcessorNode
      ============================ */
@@ -304,7 +250,9 @@
     if (isRecording) return;
 
     try {
-      mediaStream = await getWorkingMic();
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
     } catch (e) {
       setStatus('無法存取麥克風');
       console.error('[Gemini Live] Mic error:', e);
@@ -342,35 +290,7 @@
     source.connect(workletNode);
     workletNode.connect(audioContext.destination);
 
-    // 診斷：檢查 MediaStream track 和 AudioContext 狀態
-    const track = mediaStream.getAudioTracks()[0];
-    console.log(`[Gemini Live] Track: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}, label=${track.label}`);
-    console.log(`[Gemini Live] AudioContext: state=${audioContext.state}, sampleRate=${audioContext.sampleRate}`);
-    const settings = track.getSettings();
-    console.log(`[Gemini Live] Track settings:`, JSON.stringify(settings));
-
-    // 診斷：用 AnalyserNode 直接檢測原始音訊能量
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    source.connect(analyser);
-    const diagBuf = new Float32Array(analyser.fftSize);
-    let diagCount = 0;
-    const diagInterval = setInterval(() => {
-      analyser.getFloatTimeDomainData(diagBuf);
-      let maxVal = 0;
-      for (let i = 0; i < diagBuf.length; i++) {
-        const v = Math.abs(diagBuf[i]);
-        if (v > maxVal) maxVal = v;
-      }
-      diagCount++;
-      if (diagCount <= 10 || diagCount % 30 === 0) {
-        console.log(`[Gemini Live] Analyser peak=${maxVal.toFixed(6)}, ctx.state=${audioContext.state}`);
-      }
-      if (diagCount >= 60) clearInterval(diagInterval);
-    }, 500);
-
     isRecording = true;
-    console.log(`[Gemini Live] 錄音已啟動, AudioContext sampleRate=${audioContext.sampleRate}`);
 
     // 定期送出音訊 chunk（JSON + base64）
     sendIntervalId = setInterval(() => {
@@ -385,63 +305,18 @@
       }
       sendBuffer = [];
 
-      // 計算 RMS 音量（診斷用）
-      let sumSq = 0;
-      for (let i = 0; i < merged.length; i++) sumSq += merged[i] * merged[i];
-      const rms = Math.sqrt(sumSq / merged.length);
-
       const b64 = arrayBufferToBase64(merged.buffer);
       if (ws && ws.readyState === WebSocket.OPEN) {
-        const msg = JSON.stringify({
+        ws.send(JSON.stringify({
           realtimeInput: {
             audio: {
               mimeType: 'audio/pcm',
               data: b64
             }
           }
-        });
-        ws.send(msg);
-        clientMsgCount++;
-        if (clientMsgCount <= 5 || clientMsgCount % 30 === 0) {
-          console.log(`[Gemini Live] chunk #${clientMsgCount}: ${merged.length} samples, RMS=${rms.toFixed(0)}, payload=${msg.length} bytes`);
-        }
+        }));
       }
     }, CHUNK_INTERVAL_MS);
-  }
-
-  /* ============================
-     重新取得麥克風（裝置變更時）
-     ============================ */
-  let micSource = null;
-
-  async function restartMicStream() {
-    console.log('[Gemini Live] 重新取得麥克風...');
-    // 停止舊的 track
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(t => t.stop());
-    }
-    try {
-      mediaStream = await getWorkingMic();
-
-      // 重新連接到 AudioWorklet
-      if (workletNode) workletNode.disconnect();
-      if (micSource) micSource.disconnect();
-
-      micSource = audioContext.createMediaStreamSource(mediaStream);
-      workletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
-      workletNode.port.onmessage = (e) => {
-        if (!isRecording) return;
-        const pcm16 = new Int16Array(e.data);
-        sendBuffer.push(pcm16);
-      };
-      micSource.connect(workletNode);
-      workletNode.connect(audioContext.destination);
-
-      const track = mediaStream.getAudioTracks()[0];
-      console.log(`[Gemini Live] 麥克風已重新連接: enabled=${track.enabled}, muted=${track.muted}, label=${track.label}`);
-    } catch (e) {
-      console.error('[Gemini Live] 重新取得麥克風失敗:', e);
-    }
   }
 
   /* ============================
