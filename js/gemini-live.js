@@ -252,6 +252,49 @@
   }
 
   /* ============================
+     取得可用麥克風（自動跳過 muted 的裝置）
+     ============================ */
+  async function getWorkingMic() {
+    const constraints = { audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } };
+
+    // 先嘗試預設麥克風
+    let stream = await navigator.mediaDevices.getUserMedia(constraints);
+    let track = stream.getAudioTracks()[0];
+    console.log(`[Gemini Live] 預設麥克風: ${track.label}, muted=${track.muted}`);
+
+    if (!track.muted) return stream;
+
+    // 預設麥克風 muted（可能是 USB DAC 沒有 mic），嘗試其他裝置
+    console.log('[Gemini Live] 預設麥克風 muted，嘗試其他裝置...');
+    stream.getTracks().forEach(t => t.stop());
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioInputs = devices.filter(d => d.kind === 'audioinput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+    console.log(`[Gemini Live] 可用麥克風裝置: ${audioInputs.map(d => d.label).join(', ')}`);
+
+    for (const device of audioInputs) {
+      try {
+        const altStream = await navigator.mediaDevices.getUserMedia({
+          audio: { deviceId: { exact: device.deviceId }, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+        const altTrack = altStream.getAudioTracks()[0];
+        console.log(`[Gemini Live] 嘗試: ${altTrack.label}, muted=${altTrack.muted}`);
+        if (!altTrack.muted) {
+          console.log(`[Gemini Live] 使用替代麥克風: ${altTrack.label}`);
+          return altStream;
+        }
+        altStream.getTracks().forEach(t => t.stop());
+      } catch (e) {
+        console.warn(`[Gemini Live] 裝置 ${device.label} 無法使用:`, e);
+      }
+    }
+
+    // 都不行，返回預設的（至少有 stream 物件）
+    console.warn('[Gemini Live] 所有麥克風都 muted，使用預設');
+    return await navigator.mediaDevices.getUserMedia(constraints);
+  }
+
+  /* ============================
      自動開始串流錄音（連線成功後呼叫）
      使用 AudioWorkletNode 取代已棄用的 ScriptProcessorNode
      ============================ */
@@ -261,9 +304,7 @@
     if (isRecording) return;
 
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-      });
+      mediaStream = await getWorkingMic();
     } catch (e) {
       setStatus('無法存取麥克風');
       console.error('[Gemini Live] Mic error:', e);
@@ -380,9 +421,7 @@
       mediaStream.getTracks().forEach(t => t.stop());
     }
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-      });
+      mediaStream = await getWorkingMic();
 
       // 重新連接到 AudioWorklet
       if (workletNode) workletNode.disconnect();
