@@ -92,7 +92,7 @@ wss.on('connection', (clientWs) => {
       console.log(`[Proxy] Gemini→Client #${geminiMsgCount}: ${preview}`);
     }
     if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data, { binary: isBinary });
+      clientWs.send(data);
     }
   });
 
@@ -120,8 +120,8 @@ wss.on('connection', (clientWs) => {
       console.log(`[Proxy] Client→Gemini #${clientMsgCount} (binary=${isBinary}): ${preview}`);
     }
     if (geminiWs.readyState === WebSocket.OPEN) {
-      // 直接轉發：binary 保持 binary，text 保持 text
-      geminiWs.send(data, { binary: isBinary });
+      // 直接轉發原始 Buffer（與 RoBo 一致：geminiWs.send(data)）
+      geminiWs.send(data);
     } else {
       console.warn(`[Proxy] Gemini WS 未就緒 (state=${geminiWs.readyState}), 丟棄訊息`);
     }

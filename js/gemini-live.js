@@ -279,7 +279,7 @@
     isRecording = true;
     console.log(`[Gemini Live] 錄音已啟動, AudioContext sampleRate=${audioContext.sampleRate}`);
 
-    // 定期送出音訊 chunk（raw binary PCM，不用 JSON 包裝）
+    // 定期送出音訊 chunk（JSON + base64）
     sendIntervalId = setInterval(() => {
       if (sendBuffer.length === 0) return;
       let totalLen = 0;
@@ -292,11 +292,25 @@
       }
       sendBuffer = [];
 
+      // 計算 RMS 音量（診斷用）
+      let sumSq = 0;
+      for (let i = 0; i < merged.length; i++) sumSq += merged[i] * merged[i];
+      const rms = Math.sqrt(sumSq / merged.length);
+
+      const b64 = arrayBufferToBase64(merged.buffer);
       if (ws && ws.readyState === WebSocket.OPEN) {
-        // 直接送 raw binary PCM（Int16 LE），與 RoBo 做法一致
-        ws.send(merged.buffer);
-        if (clientMsgCount++ % 20 === 0) {
-          console.log(`[Gemini Live] 已送出 ${clientMsgCount} 個音訊 chunk (${merged.byteLength} raw bytes)`);
+        const msg = JSON.stringify({
+          realtimeInput: {
+            audio: {
+              mimeType: 'audio/pcm',
+              data: b64
+            }
+          }
+        });
+        ws.send(msg);
+        clientMsgCount++;
+        if (clientMsgCount <= 5 || clientMsgCount % 30 === 0) {
+          console.log(`[Gemini Live] chunk #${clientMsgCount}: ${merged.length} samples, RMS=${rms.toFixed(0)}, payload=${msg.length} bytes`);
         }
       }
     }, CHUNK_INTERVAL_MS);
