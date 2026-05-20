@@ -78,17 +78,17 @@ wss.on('connection', (clientWs) => {
     console.log('[Proxy] 已連接 Gemini Live API');
   });
 
-  // Gemini → Client
-  geminiWs.on('message', (data) => {
+  // Gemini → Client（原封不動轉發，支援 text 和 binary）
+  geminiWs.on('message', (data, isBinary) => {
     if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data.toString());
+      clientWs.send(isBinary ? data : data.toString(), { binary: isBinary });
     }
   });
 
-  // Client → Gemini
-  clientWs.on('message', (data) => {
+  // Client → Gemini（原封不動轉發）
+  clientWs.on('message', (data, isBinary) => {
     if (geminiWs.readyState === WebSocket.OPEN) {
-      geminiWs.send(data.toString());
+      geminiWs.send(isBinary ? data : data.toString(), { binary: isBinary });
     }
   });
 

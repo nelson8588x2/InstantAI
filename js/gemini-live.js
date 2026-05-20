@@ -25,7 +25,6 @@
   let ws = null;
   let mediaStream = null;
   let audioContext = null;
-  let scriptProcessor = null;
   let isConnected = false;
   let isRecording = false;
   let audioQueue = [];          // 待播放的 PCM chunks
@@ -96,8 +95,12 @@
     };
 
     ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-      handleServerMessage(msg);
+      try {
+        const msg = JSON.parse(event.data);
+        handleServerMessage(msg);
+      } catch (e) {
+        console.warn('[Gemini Live] 無法解析訊息:', e, event.data?.substring?.(0, 200));
+      }
     };
 
     ws.onerror = (err) => {
@@ -105,10 +108,11 @@
       setStatus('連線錯誤');
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       const wasConnected = isConnected;
       isConnected = false;
       isRecording = false;
+      console.log('[Gemini Live] WS closed, code:', event.code, 'reason:', event.reason);
       if (wasConnected) setStatus('已斷線');
     };
   }
@@ -202,7 +206,10 @@
 
   /* ============================
      自動開始串流錄音（連線成功後呼叫）
+     使用 AudioWorkletNode 取代已棄用的 ScriptProcessorNode
      ============================ */
+  let workletNode = null;
+
   async function startStreaming() {
     if (isRecording) return;
 
@@ -224,21 +231,26 @@
       await audioContext.resume();
     }
 
-    const source = audioContext.createMediaStreamSource(mediaStream);
-    scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
-    scriptProcessor.onaudioprocess = (e) => {
-      if (!isRecording) return;
-      const float32 = e.inputBuffer.getChannelData(0);
-      const pcm16 = new Int16Array(float32.length);
-      for (let i = 0; i < float32.length; i++) {
-        const s = Math.max(-1, Math.min(1, float32[i]));
-        pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    // 載入 AudioWorklet processor
+    try {
+      await audioContext.audioWorklet.addModule('js/pcm-processor.js');
+    } catch (e) {
+      // 可能已經載入過，忽略重複載入錯誤
+      if (!e.message.includes('already been added')) {
+        console.warn('[Gemini Live] AudioWorklet load warning:', e);
       }
+    }
+
+    const source = audioContext.createMediaStreamSource(mediaStream);
+    workletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
+    workletNode.port.onmessage = (e) => {
+      if (!isRecording) return;
+      const pcm16 = new Int16Array(e.data);
       sendBuffer.push(pcm16);
     };
 
-    source.connect(scriptProcessor);
-    scriptProcessor.connect(audioContext.destination);
+    source.connect(workletNode);
+    workletNode.connect(audioContext.destination);
 
     isRecording = true;
 
@@ -280,9 +292,9 @@
       sendIntervalId = null;
     }
 
-    if (scriptProcessor) {
-      scriptProcessor.disconnect();
-      scriptProcessor = null;
+    if (workletNode) {
+      workletNode.disconnect();
+      workletNode = null;
     }
     if (mediaStream) {
       mediaStream.getTracks().forEach(t => t.stop());
