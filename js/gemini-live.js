@@ -277,9 +277,9 @@
     workletNode.connect(audioContext.destination);
 
     isRecording = true;
-    console.log('[Gemini Live] 錄音已啟動，開始定期送出音訊 chunk...');
+    console.log(`[Gemini Live] 錄音已啟動, AudioContext sampleRate=${audioContext.sampleRate}`);
 
-    // 定期送出音訊 chunk
+    // 定期送出音訊 chunk（raw binary PCM，不用 JSON 包裝）
     sendIntervalId = setInterval(() => {
       if (sendBuffer.length === 0) return;
       let totalLen = 0;
@@ -292,20 +292,11 @@
       }
       sendBuffer = [];
 
-      const b64 = arrayBufferToBase64(merged.buffer);
       if (ws && ws.readyState === WebSocket.OPEN) {
-        const payload = JSON.stringify({
-          realtimeInput: {
-            audio: {
-              mimeType: 'audio/pcm;rate=' + SAMPLE_RATE,
-              data: b64
-            }
-          }
-        });
-        ws.send(payload);
-        // 每 20 個 chunk 輸出一次 log 避免洗版
+        // 直接送 raw binary PCM（Int16 LE），與 RoBo 做法一致
+        ws.send(merged.buffer);
         if (clientMsgCount++ % 20 === 0) {
-          console.log(`[Gemini Live] 已送出 ${clientMsgCount} 個音訊 chunk (${payload.length} bytes)`);
+          console.log(`[Gemini Live] 已送出 ${clientMsgCount} 個音訊 chunk (${merged.byteLength} raw bytes)`);
         }
       }
     }, CHUNK_INTERVAL_MS);

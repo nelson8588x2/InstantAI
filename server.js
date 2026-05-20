@@ -96,31 +96,31 @@ wss.on('connection', (clientWs) => {
     }
   });
 
-  // Client → Gemini（直接轉發原始資料，保持 frame 類型）
+  // Client → Gemini（直接轉發原始資料）
   clientWs.on('message', (data, isBinary) => {
     clientMsgCount++;
-    if (clientMsgCount <= 3 || clientMsgCount % 50 === 0) {
+    // 記錄前幾筆 + 每 50 筆
+    if (clientMsgCount <= 5 || clientMsgCount % 50 === 0) {
       let preview;
       if (isBinary) {
-        preview = `[binary ${data.length} bytes]`;
+        preview = `[binary audio ${data.length} bytes]`;
       } else {
         const str = data.toString();
         try {
           const parsed = JSON.parse(str);
-          if (parsed.realtimeInput?.audio) {
-            preview = `realtimeInput/audio (${str.length} bytes)`;
-          } else if (parsed.setup) {
+          if (parsed.setup) {
             preview = `setup: model=${parsed.setup.model}`;
           } else {
-            preview = str.substring(0, 200);
+            preview = `[text ${str.length} bytes] ${str.substring(0, 120)}`;
           }
         } catch {
-          preview = str.substring(0, 100);
+          preview = `[text] ${str.substring(0, 100)}`;
         }
       }
-      console.log(`[Proxy] Client→Gemini #${clientMsgCount}: ${preview}`);
+      console.log(`[Proxy] Client→Gemini #${clientMsgCount} (binary=${isBinary}): ${preview}`);
     }
     if (geminiWs.readyState === WebSocket.OPEN) {
+      // 直接轉發：binary 保持 binary，text 保持 text
       geminiWs.send(data, { binary: isBinary });
     } else {
       console.warn(`[Proxy] Gemini WS 未就緒 (state=${geminiWs.readyState}), 丟棄訊息`);
