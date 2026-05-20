@@ -27,17 +27,27 @@
   let audioContext = null;
   let isConnected = false;
   let isRecording = false;
-  let audioQueue = [];          // 待播放的 PCM chunks
   let isPlaying = false;
   let playbackContext = null;
+  let playbackWorklet = null;
   let sendBuffer = [];          // 累積的錄音 buffer
   let sendIntervalId = null;
   let micPermissionGranted = false;
   let clientMsgCount = 0;
+  let nextPlayTime = 0;         // 連續排程播放的下一個時間點
 
   // 光暈控制回調（由外部設定）
   let onAiSpeakingStart = null;
   let onAiSpeakingEnd = null;
+
+  // 監聽音訊設備變更（耳機插拔）
+  navigator.mediaDevices.addEventListener('devicechange', async () => {
+    console.log('[Gemini Live] 偵測到音訊設備變更（耳機插拔）');
+    if (isRecording && isConnected) {
+      // 重新取得麥克風
+      await restartMicStream();
+    }
+  });
 
   /* ============================
      DOM 元素
@@ -169,41 +179,48 @@
         for (const part of sc.modelTurn.parts) {
           if (part.inlineData && part.inlineData.mimeType &&
               part.inlineData.mimeType.startsWith('audio/')) {
-            const pcmB64 = part.inlineData.data;
-            audioQueue.push(pcmB64);
-            if (!isPlaying) {
-              playNextChunk();
-            }
+            playAudioChunk(part.inlineData.data);
           }
         }
       }
 
       // 被打斷
       if (sc.interrupted) {
-        audioQueue = [];
         stopPlayback();
       }
     }
   }
 
   /* ============================
-     音訊播放（AI 回覆）
+     音訊播放（AI 回覆）- 使用 AudioWorklet 連續播放
      ============================ */
-  function playNextChunk() {
-    if (audioQueue.length === 0) {
-      isPlaying = false;
-      if (onAiSpeakingEnd) onAiSpeakingEnd();
-      return;
+  async function ensurePlaybackReady() {
+    if (playbackWorklet) return;
+    playbackContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: OUTPUT_SAMPLE_RATE });
+    await playbackContext.audioWorklet.addModule('js/playback-worklet.js');
+    playbackWorklet = new AudioWorkletNode(playbackContext, 'playback-processor');
+    playbackWorklet.connect(playbackContext.destination);
+    playbackWorklet.port.onmessage = (e) => {
+      // 緩衝區已空 → 說話結束
+      if (e.data.buffered === 0 && isPlaying) {
+        isPlaying = false;
+        if (onAiSpeakingEnd) onAiSpeakingEnd();
+      }
+    };
+  }
+
+  async function playAudioChunk(pcmB64) {
+    await ensurePlaybackReady();
+    if (playbackContext.state === 'suspended') {
+      await playbackContext.resume();
     }
 
-    isPlaying = true;
-    if (onAiSpeakingStart) onAiSpeakingStart();
-
-    if (!playbackContext) {
-      playbackContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: OUTPUT_SAMPLE_RATE });
+    if (!isPlaying) {
+      isPlaying = true;
+      if (onAiSpeakingStart) onAiSpeakingStart();
     }
 
-    const pcmB64 = audioQueue.shift();
+    // 解碼 base64 → Int16 → Float32
     const pcmBytes = base64ToArrayBuffer(pcmB64);
     const pcm16 = new Int16Array(pcmBytes);
     const float32 = new Float32Array(pcm16.length);
@@ -211,20 +228,15 @@
       float32[i] = pcm16[i] / 32768;
     }
 
-    const buffer = playbackContext.createBuffer(1, float32.length, OUTPUT_SAMPLE_RATE);
-    buffer.getChannelData(0).set(float32);
-
-    const source = playbackContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(playbackContext.destination);
-    source.onended = () => {
-      playNextChunk();
-    };
-    source.start();
+    // 送入 playback worklet 的環形緩衝區
+    playbackWorklet.port.postMessage(float32);
   }
 
   function stopPlayback() {
     isPlaying = false;
+    if (playbackWorklet) {
+      playbackWorklet.port.postMessage('interrupt');
+    }
     if (onAiSpeakingEnd) onAiSpeakingEnd();
   }
 
@@ -267,43 +279,7 @@
       }
     }
 
-    const source = audioContext.createMediaStreamSource(mediaStream);
-    workletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
-    workletNode.port.onmessage = (e) => {
-      if (!isRecording) return;
-      const pcm16 = new Int16Array(e.data);
-      sendBuffer.push(pcm16);
-    };
-
-    source.connect(workletNode);
-    workletNode.connect(audioContext.destination);
-
-    // 診斷：檢查 MediaStream track 和 AudioContext 狀態
-    const track = mediaStream.getAudioTracks()[0];
-    console.log(`[Gemini Live] Track: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}, label=${track.label}`);
-    console.log(`[Gemini Live] AudioContext: state=${audioContext.state}, sampleRate=${audioContext.sampleRate}`);
-    const settings = track.getSettings();
-    console.log(`[Gemini Live] Track settings:`, JSON.stringify(settings));
-
-    // 診斷：用 AnalyserNode 直接檢測原始音訊能量
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 2048;
-    source.connect(analyser);
-    const diagBuf = new Float32Array(analyser.fftSize);
-    let diagCount = 0;
-    const diagInterval = setInterval(() => {
-      analyser.getFloatTimeDomainData(diagBuf);
-      let maxVal = 0;
-      for (let i = 0; i < diagBuf.length; i++) {
-        const v = Math.abs(diagBuf[i]);
-        if (v > maxVal) maxVal = v;
-      }
-      diagCount++;
-      if (diagCount <= 10 || diagCount % 30 === 0) {
-        console.log(`[Gemini Live] Analyser peak=${maxVal.toFixed(6)}, ctx.state=${audioContext.state}`);
-      }
-      if (diagCount >= 60) clearInterval(diagInterval);
-    }, 500);
+    connectMicToWorklet();
 
     isRecording = true;
     console.log(`[Gemini Live] 錄音已啟動, AudioContext sampleRate=${audioContext.sampleRate}`);
@@ -346,6 +322,57 @@
   }
 
   /* ============================
+     連接麥克風到 AudioWorklet
+     ============================ */
+  let micSource = null;
+
+  function connectMicToWorklet() {
+    // 斷開舊的連接
+    if (workletNode) {
+      workletNode.disconnect();
+    }
+    if (micSource) {
+      micSource.disconnect();
+    }
+
+    micSource = audioContext.createMediaStreamSource(mediaStream);
+    workletNode = new AudioWorkletNode(audioContext, 'pcm-processor');
+    workletNode.port.onmessage = (e) => {
+      if (!isRecording) return;
+      const pcm16 = new Int16Array(e.data);
+      sendBuffer.push(pcm16);
+    };
+
+    micSource.connect(workletNode);
+    workletNode.connect(audioContext.destination);
+
+    // 診斷 log
+    const track = mediaStream.getAudioTracks()[0];
+    console.log(`[Gemini Live] Track: enabled=${track.enabled}, muted=${track.muted}, readyState=${track.readyState}, label=${track.label}`);
+    console.log(`[Gemini Live] AudioContext: state=${audioContext.state}, sampleRate=${audioContext.sampleRate}`);
+  }
+
+  /* ============================
+     重新取得麥克風（設備變更時）
+     ============================ */
+  async function restartMicStream() {
+    console.log('[Gemini Live] 重新取得麥克風...');
+    // 停止舊的 track
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(t => t.stop());
+    }
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      connectMicToWorklet();
+      console.log('[Gemini Live] 麥克風已重新連接');
+    } catch (e) {
+      console.error('[Gemini Live] 重新取得麥克風失敗:', e);
+    }
+  }
+
+  /* ============================
      停止串流
      ============================ */
   function stopStreaming() {
@@ -372,7 +399,6 @@
      ============================ */
   function cleanup() {
     stopStreaming();
-    audioQueue = [];
     stopPlayback();
     if (ws) {
       ws.close();
