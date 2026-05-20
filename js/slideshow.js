@@ -1591,23 +1591,11 @@
   }
 
   function nextSlide() {
-    // S4：下一頁 → 開啟即時對話連線
-    if (currentScript === '4' && window.geminiLive) {
-      if (!window.geminiLive.isConnected) {
-        window.geminiLive.connect();
-      }
-      return;
-    }
     const slides = getSlides();
     if (currentIndex < slides.length - 1) showSlide(currentIndex + 1);
   }
 
   function prevSlide() {
-    // S4：上一頁 → 關閉即時對話連線
-    if (currentScript === '4' && window.geminiLive) {
-      window.geminiLive.cleanup();
-      return;
-    }
     if (currentIndex > 0) showSlide(currentIndex - 1);
   }
 
@@ -1649,12 +1637,10 @@
     const newContainer = getActiveContainer();
     if (newContainer) newContainer.classList.add('active');
 
-    // S4 麥克風容器顯隱
-    const micContainer = document.querySelector('.s4-mic-container');
-    if (micContainer) {
-      micContainer.style.display = (scriptNum === '4') ? 'flex' : 'none';
+    // S4：進入時自動連線，離開時自動斷線
+    if (scriptNum === '4' && window.geminiLive) {
+      window.geminiLive.connect();
     }
-    // 離開 S4 時斷線
     if (scriptNum !== '4' && window.geminiLive) {
       window.geminiLive.cleanup();
     }
@@ -1695,7 +1681,5 @@
   });
 
   // 初始化
-  const micContainerInit = document.querySelector('.s4-mic-container');
-  if (micContainerInit) micContainerInit.style.display = 'none';
   showSlide(0);
 })();

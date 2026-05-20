@@ -2,6 +2,9 @@
  * S4 Gemini Live API 即時語音對話模組
  * 使用 WebSocket 連接 Gemini 2.5 Flash Native Audio
  * 支援即時雙向音訊串流 + Google Search Grounding
+ *
+ * 無按鈕設計：切換到 S4 時自動連線並開始串流麥克風
+ * 頁面載入時即預先取得麥克風權限
  */
 (function () {
   'use strict';
@@ -30,6 +33,7 @@
   let playbackContext = null;
   let sendBuffer = [];          // 累積的錄音 buffer
   let sendIntervalId = null;
+  let micPermissionGranted = false;
 
   // 光暈控制回調（由外部設定）
   let onAiSpeakingStart = null;
@@ -38,13 +42,35 @@
   /* ============================
      DOM 元素
      ============================ */
-  const micBtn = document.getElementById('s4-mic-btn');
   const statusEl = document.getElementById('s4-status');
+
+  /* ============================
+     頁面載入時預先取得麥克風權限
+     ============================ */
+  async function requestMicPermission() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { sampleRate: SAMPLE_RATE, channelCount: 1, echoCancellation: true }
+      });
+      // 取得權限後立即停止（僅確認權限）
+      stream.getTracks().forEach(t => t.stop());
+      micPermissionGranted = true;
+      console.log('[Gemini Live] 麥克風權限已取得');
+    } catch (e) {
+      micPermissionGranted = false;
+      console.warn('[Gemini Live] 麥克風權限被拒絕:', e);
+    }
+  }
+
+  // 頁面載入後立即詢問麥克風權限
+  requestMicPermission();
 
   /* ============================
      WebSocket 連接（透過後端代理）
      ============================ */
   function connect() {
+    if (isConnected || (ws && ws.readyState === WebSocket.CONNECTING)) return;
+
     setStatus('連線中...');
     ws = new WebSocket(WS_URL);
 
@@ -77,13 +103,13 @@
     ws.onerror = (err) => {
       console.error('[Gemini Live] WebSocket error:', err);
       setStatus('連線錯誤');
-      cleanup();
     };
 
     ws.onclose = () => {
+      const wasConnected = isConnected;
       isConnected = false;
-      setStatus('已斷線');
-      cleanup();
+      isRecording = false;
+      if (wasConnected) setStatus('已斷線');
     };
   }
 
@@ -91,10 +117,18 @@
      處理伺服器訊息
      ============================ */
   function handleServerMessage(msg) {
-    // Setup 完成
+    // 錯誤訊息
+    if (msg.error) {
+      setStatus('伺服器錯誤');
+      console.error('[Gemini Live] Server error:', msg.error);
+      return;
+    }
+
+    // Setup 完成 → 自動開始錄音串流
     if (msg.setupComplete) {
       isConnected = true;
-      setStatus('已連線 — 點擊麥克風開始對話');
+      setStatus('對話中');
+      startStreaming();
       return;
     }
 
@@ -107,7 +141,6 @@
         for (const part of sc.modelTurn.parts) {
           if (part.inlineData && part.inlineData.mimeType &&
               part.inlineData.mimeType.startsWith('audio/')) {
-            // base64 PCM 資料
             const pcmB64 = part.inlineData.data;
             audioQueue.push(pcmB64);
             if (!isPlaying) {
@@ -115,16 +148,6 @@
             }
           }
         }
-      }
-
-      // 模型生成完成
-      if (sc.generationComplete) {
-        // 等播放完才觸發 end
-      }
-
-      // 回合結束
-      if (sc.turnComplete) {
-        // AI 說完了 — 光暈會在播放完畢時關閉
       }
 
       // 被打斷
@@ -178,13 +201,10 @@
   }
 
   /* ============================
-     麥克風錄音 + 送出
+     自動開始串流錄音（連線成功後呼叫）
      ============================ */
-  async function startRecording() {
-    if (!isConnected) {
-      connect();
-      return;
-    }
+  async function startStreaming() {
+    if (isRecording) return;
 
     try {
       mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -199,14 +219,16 @@
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
     }
+    // 確保 AudioContext 是 running 狀態
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
 
     const source = audioContext.createMediaStreamSource(mediaStream);
-    // 使用 ScriptProcessorNode 取得 PCM（相容性佳）
     scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
     scriptProcessor.onaudioprocess = (e) => {
       if (!isRecording) return;
       const float32 = e.inputBuffer.getChannelData(0);
-      // 轉成 16-bit PCM
       const pcm16 = new Int16Array(float32.length);
       for (let i = 0; i < float32.length; i++) {
         const s = Math.max(-1, Math.min(1, float32[i]));
@@ -219,13 +241,10 @@
     scriptProcessor.connect(audioContext.destination);
 
     isRecording = true;
-    micBtn.classList.add('recording');
-    setStatus('錄音中...');
 
     // 定期送出音訊 chunk
     sendIntervalId = setInterval(() => {
       if (sendBuffer.length === 0) return;
-      // 合併所有 buffer
       let totalLen = 0;
       for (const buf of sendBuffer) totalLen += buf.length;
       const merged = new Int16Array(totalLen);
@@ -236,7 +255,6 @@
       }
       sendBuffer = [];
 
-      // 送出 realtimeInput
       const b64 = arrayBufferToBase64(merged.buffer);
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
@@ -251,43 +269,15 @@
     }, CHUNK_INTERVAL_MS);
   }
 
-  function stopRecording() {
+  /* ============================
+     停止串流
+     ============================ */
+  function stopStreaming() {
     isRecording = false;
-    micBtn.classList.remove('recording');
-    setStatus('處理中...');
 
     if (sendIntervalId) {
       clearInterval(sendIntervalId);
       sendIntervalId = null;
-    }
-
-    // 送出剩餘 buffer
-    if (sendBuffer.length > 0 && ws && ws.readyState === WebSocket.OPEN) {
-      let totalLen = 0;
-      for (const buf of sendBuffer) totalLen += buf.length;
-      const merged = new Int16Array(totalLen);
-      let offset = 0;
-      for (const buf of sendBuffer) {
-        merged.set(buf, offset);
-        offset += buf.length;
-      }
-      sendBuffer = [];
-      const b64 = arrayBufferToBase64(merged.buffer);
-      ws.send(JSON.stringify({
-        realtimeInput: {
-          audio: {
-            mimeType: 'audio/pcm;rate=' + SAMPLE_RATE,
-            data: b64
-          }
-        }
-      }));
-    }
-
-    // 通知音訊串流結束
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        realtimeInput: { audioStreamEnd: true }
-      }));
     }
 
     if (scriptProcessor) {
@@ -298,18 +288,22 @@
       mediaStream.getTracks().forEach(t => t.stop());
       mediaStream = null;
     }
+    sendBuffer = [];
   }
 
   /* ============================
-     清理
+     清理（離開 S4 時呼叫）
      ============================ */
   function cleanup() {
-    stopRecording();
+    stopStreaming();
+    audioQueue = [];
+    stopPlayback();
     if (ws) {
       ws.close();
       ws = null;
     }
     isConnected = false;
+    setStatus('');
   }
 
   /* ============================
@@ -338,20 +332,7 @@
   }
 
   /* ============================
-     事件綁定
-     ============================ */
-  if (micBtn) {
-    micBtn.addEventListener('click', () => {
-      if (isRecording) {
-        stopRecording();
-      } else {
-        startRecording();
-      }
-    });
-  }
-
-  /* ============================
-     對外介面（供 slideshow.js 光暈控制使用）
+     對外介面（供 slideshow.js 使用）
      ============================ */
   window.geminiLive = {
     connect,
