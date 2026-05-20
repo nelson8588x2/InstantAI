@@ -33,6 +33,7 @@
   let sendBuffer = [];          // 累積的錄音 buffer
   let sendIntervalId = null;
   let micPermissionGranted = false;
+  let clientMsgCount = 0;
 
   // 光暈控制回調（由外部設定）
   let onAiSpeakingStart = null;
@@ -74,6 +75,7 @@
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
+      console.log('[Gemini Live] WS 已連線，送出 setup...');
       // 送出 setup 訊息
       const setup = {
         setup: {
@@ -91,7 +93,9 @@
           tools: [{ googleSearch: {} }]
         }
       };
-      ws.send(JSON.stringify(setup));
+      const setupStr = JSON.stringify(setup);
+      console.log('[Gemini Live] Setup payload:', setupStr.substring(0, 300));
+      ws.send(setupStr);
     };
 
     ws.onmessage = async (event) => {
@@ -125,6 +129,10 @@
      處理伺服器訊息
      ============================ */
   function handleServerMessage(msg) {
+    // debug: 顯示收到的訊息 key
+    const keys = Object.keys(msg);
+    console.log('[Gemini Live] 收到訊息, keys:', keys.join(', '));
+
     // 錯誤訊息
     if (msg.error) {
       setStatus('伺服器錯誤');
@@ -135,6 +143,7 @@
     // Setup 完成 → 自動開始錄音串流
     if (msg.setupComplete) {
       isConnected = true;
+      console.log('[Gemini Live] Setup 完成，開始串流錄音...');
       setStatus('對話中');
       startStreaming();
       return;
@@ -257,6 +266,7 @@
     workletNode.connect(audioContext.destination);
 
     isRecording = true;
+    console.log('[Gemini Live] 錄音已啟動，開始定期送出音訊 chunk...');
 
     // 定期送出音訊 chunk
     sendIntervalId = setInterval(() => {
@@ -273,14 +283,19 @@
 
       const b64 = arrayBufferToBase64(merged.buffer);
       if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
+        const payload = JSON.stringify({
           realtimeInput: {
             audio: {
               mimeType: 'audio/pcm;rate=' + SAMPLE_RATE,
               data: b64
             }
           }
-        }));
+        });
+        ws.send(payload);
+        // 每 20 個 chunk 輸出一次 log 避免洗版
+        if (clientMsgCount++ % 20 === 0) {
+          console.log(`[Gemini Live] 已送出 ${clientMsgCount} 個音訊 chunk (${payload.length} bytes)`);
+        }
       }
     }, CHUNK_INTERVAL_MS);
   }

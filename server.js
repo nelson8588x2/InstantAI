@@ -78,17 +78,44 @@ wss.on('connection', (clientWs) => {
     console.log('[Proxy] 已連接 Gemini Live API');
   });
 
-  // Gemini → Client（Gemini Live API 全程 JSON text，強制以 string 轉發）
+  // 訊息計數器
+  let geminiMsgCount = 0;
+  let clientMsgCount = 0;
+
+  // Gemini → Client
   geminiWs.on('message', (data) => {
+    geminiMsgCount++;
+    const str = data.toString();
+    const preview = str.substring(0, 200);
+    console.log(`[Proxy] Gemini→Client #${geminiMsgCount} (${str.length} bytes): ${preview}`);
     if (clientWs.readyState === WebSocket.OPEN) {
-      clientWs.send(data.toString());
+      clientWs.send(str);
     }
   });
 
-  // Client → Gemini（前端發送的也是 JSON text）
+  // Client → Gemini
   clientWs.on('message', (data) => {
+    clientMsgCount++;
+    const str = data.toString();
+    // 音訊資料太長只顯示類型
+    let preview;
+    try {
+      const parsed = JSON.parse(str);
+      if (parsed.realtimeInput) {
+        preview = `realtimeInput (audio chunk ${str.length} bytes)`;
+      } else if (parsed.setup) {
+        preview = `setup: model=${parsed.setup.model}`;
+      } else {
+        preview = str.substring(0, 200);
+      }
+    } catch {
+      preview = str.substring(0, 200);
+    }
+    console.log(`[Proxy] Client→Gemini #${clientMsgCount}: ${preview}`);
     if (geminiWs.readyState === WebSocket.OPEN) {
-      geminiWs.send(data.toString());
+      geminiWs.send(str);
+    } else {
+      console.warn(`[Proxy] Gemini WS 未就緒 (state=${geminiWs.readyState}), 丟棄訊息`);
     }
   });
 
