@@ -1,0 +1,1257 @@
+/* 大膠囊設計參數（來自 PPT：1.39cm × 15.52cm，背景 19.05cm × 33.87cm） */
+:root {
+  --pill-height: 50px;
+  --pill-ratio: 11.1655;                                     /* 15.52 / 1.39 */
+  --pill-width: calc(var(--pill-height) * var(--pill-ratio));  /* ≈ 558px */
+  --pill-radius: calc(var(--pill-height) / 2);                 /* 25px */
+  --pill-padding: calc(var(--pill-radius) - 15px);             /* 10px = radius - AI-icon-half */
+}
+
+/* 全域重置 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* ========================================
+   Script 選擇器
+   ======================================== */
+.script-selector {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2000;
+}
+
+.script-btn {
+  padding: 6px 16px;
+  border: 1px solid #aaa;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #555;
+}
+
+.script-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.script-btn.active {
+  background: #4A90D9;
+  color: #fff;
+  border-color: #4A90D9;
+}
+
+/* Script 容器 */
+.script-container {
+  display: none;
+  width: 100%;
+  height: 100%;
+}
+
+.script-container.active {
+  display: block;
+}
+
+/* 簡報容器 */
+.slideshow-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* 每一頁（背景層） */
+.slide {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.slide.active {
+  display: block;
+}
+
+/* 頁面背景 */
+.slide-cover {
+  width: 100%;
+  height: 100%;
+  background-color: #d9d9d9;
+}
+
+/* ========================================
+   固定膠囊（始終置中、不會動、不縮放）
+   ======================================== */
+.pill {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--pill-width);
+  height: var(--pill-height);
+  border-radius: var(--pill-radius);
+  background-color: #cdcdcd;
+  border: 1px solid #c0c0c0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  overflow: hidden;
+}
+
+/* 內部彩色光效 — 只在膠囊邊緣內側發光 */
+.pill-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--pill-radius);
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+  /* 旋轉的彩虹錐形漸層 */
+  background: conic-gradient(
+    from 0deg,
+    #4A90D9, #43D9AD, #F5E050, #F0A050, #E84393, #4A90D9
+  );
+  /* 用 mask 挖空中間，只保留邊緣光環（約 4px 寬） */
+  -webkit-mask:
+    linear-gradient(#fff, #fff) content-box,
+    linear-gradient(#fff, #fff);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff, #fff) content-box,
+    linear-gradient(#fff, #fff);
+  mask-composite: exclude;
+  padding: 4px;
+  /* 柔化邊緣 */
+  filter: blur(2px);
+}
+
+/* 光效啟動 */
+.pill-glow.active {
+  opacity: 1;
+  animation: glowRotate 2s linear infinite, glowPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes glowRotate {
+  0%   { filter: blur(2px) hue-rotate(0deg); }
+  100% { filter: blur(2px) hue-rotate(360deg); }
+}
+
+@keyframes glowPulse {
+  0%   { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* 膠囊內容層（在光效之上） */
+.pill-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 各頁面在膠囊內的內容 */
+.pill-page {
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--pill-padding);
+}
+
+.pill-page.active {
+  display: flex;
+}
+
+/* ========================================
+   第一頁：COMPAL Logo
+   ======================================== */
+.logo-img {
+  height: 18px;
+  width: auto;
+  opacity: 0.7;
+}
+
+/* ========================================
+   第二頁：AI 助手對話
+   ======================================== */
+
+/* 第二頁膠囊內容佈局 */
+[id$="-pill-page-2"] {
+  gap: 12px;
+}
+
+/* 左側 AI 星形 icon */
+.ai-icon-wrapper {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-icon {
+  width: 30px;
+  height: 30px;
+  /* 初始狀態：縮小 + 順時針轉 90 度（出場時逆時針轉回） */
+  transform: rotate(90deg) scale(0);
+  opacity: 0;
+  transition: none;
+}
+
+/* AI icon 出場動畫：逆時針旋轉 90 度 + 放大至 1 */
+.ai-icon.animate-in {
+  animation: iconSpinIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes iconSpinIn {
+  0% {
+    transform: rotate(90deg) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 中間文字 */
+.chat-text-wrapper {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.chat-text {
+  display: inline-block;
+  font-size: 16px;
+  color: #555;
+  letter-spacing: 0.3px;
+  /* 初始狀態：透過 clip-path 隱藏 */
+  opacity: 0;
+  /* 文字使用 clip-path 由左至右揭露 */
+  clip-path: inset(0 100% 0 0);
+  transition: none;
+}
+
+/* 文字由左至右出現動畫（duration 由 JS 透過 --reveal-duration 控制，預設 0.8s） */
+.chat-text.animate-in {
+  animation: textReveal var(--reveal-duration, 0.35s) linear forwards;
+}
+
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* 右側麥克風 icon */
+.mic-icon-wrapper {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mic-icon {
+  width: 24px;
+  height: 24px;
+  opacity: 0;
+  transition: none;
+}
+
+/* 麥克風淡入動畫 */
+.mic-icon.animate-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 0.6; }
+}
+
+/* ========================================
+   第三頁：三個彩色小膠囊
+   ======================================== */
+
+/* 第三頁膠囊佈局 */
+[id$="-pill-page-3"] {
+  gap: 0;
+  position: relative;
+}
+
+/* 第三頁 AI icon 保持顯示，絕對定位在左半圓圓心 */
+[id$="-pill-page-3"] .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ai-icon-static {
+  width: 30px;
+  height: 30px;
+  opacity: 0.8;
+}
+
+
+/* 小膠囊容器 */
+.mini-pills-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-left: 38px;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+/* 各小膠囊 */
+.mini-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 5px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 17px;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 500;
+  color: #fff;
+  /* 初始：隱藏在下方 */
+  opacity: 0;
+  transform: translateY(40px);
+  transition: none;
+}
+
+/* 小膠囊從下方滑入動畫 */
+.mini-pill.pop-in {
+  animation: miniPillSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes miniPillSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 小膠囊 icon */
+.mini-pill-icon {
+  font-size: 14px;
+}
+
+/* 紅色膠囊 */
+.mini-pill-red {
+  background-color: #E74C3C;
+}
+
+/* 黃色膠囊 */
+.mini-pill-yellow {
+  background-color: #F5A623;
+}
+
+/* 綠色膠囊 */
+.mini-pill-green {
+  background-color: #27AE60;
+}
+
+/* 藍色膠囊 */
+.mini-pill-blue {
+  background-color: #4A90D9;
+}
+
+/* S2 第三頁深青綠色膠囊 */
+.mini-pill-s2-teal {
+  background-color: #3BA876;
+}
+
+/* S2 第三頁淺青綠色膠囊（Checkpoint） */
+.mini-pill-s2-teal-light {
+  background-color: #6CC9A1;
+}
+
+/* 第二頁文字從左到右消失動畫（duration 由 JS 透過 --fadeout-duration 控制） */
+.chat-text.animate-out {
+  animation: textFadeOut var(--fadeout-duration, 0.25s) linear forwards;
+}
+
+@keyframes textFadeOut {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+  }
+}
+
+/* ========================================
+   第四頁：小膠囊離場 + AI icon 離場 + COMPAL 淡入
+   ======================================== */
+
+/* 第四頁膠囊佈局 */
+#s1-pill-page-4 {
+  gap: 0;
+  position: relative;
+}
+
+/* S1 第四頁 AI icon 固定在左側（中心=大膠囊左半圓圓心） */
+#s1-pill-page-4 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* S1 第四頁小膠囊初始就可見 */
+#s1-pill-page-4 .mini-pill {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* 第四頁 AI icon（初始正常顯示，會旋轉縮小淡出） */
+.ai-icon-p4 {
+  width: 30px;
+  height: 30px;
+  opacity: 0.8;
+  transition: none;
+}
+
+.ai-icon-p4.exit {
+  animation: iconSpinOut 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes iconSpinOut {
+  0% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(90deg) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 第四頁小膠囊往下離場動畫 */
+.mini-pill.slide-out {
+  animation: miniPillSlideDown 0.4s ease-in forwards;
+}
+
+@keyframes miniPillSlideDown {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+}
+
+/* 第四頁 COMPAL logo（初始隱藏，最後淡入置中） */
+.logo-img-p4 {
+  height: 18px;
+  width: auto;
+  opacity: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.6s ease-out;
+}
+
+.logo-img-p4.fade-in {
+  opacity: 0.7;
+}
+
+/* ========================================
+   Script 2：專用樣式
+   ======================================== */
+
+/* 文字中的粗體字 */
+.chat-text strong {
+  font-weight: 700;
+}
+
+/* 文字中的白色粗體字（Tom、February 8） */
+.chat-text .text-white {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* S2 第二頁佈局 */
+#s2-pill-page-2 {
+  gap: 0;
+  position: relative;
+}
+
+/* S2 第二頁 AI icon 絕對定位在左半圓圓心（同 S1 第三頁） */
+#s2-pill-page-2 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+/* S2 內容區域（文字行 + 小膠囊共用空間，依序切換顯示） */
+.s2-content-area {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-left: 38px;
+}
+
+/* S2 文字行 — 預設隱藏 */
+.s2-text-line {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+}
+
+.s2-text-line.active {
+  display: flex;
+}
+
+/* S2 小膠囊容器 — pill-page 層級絕對定位，均勻分布在 AI icon 和右側 circle 之間 */
+.s2-mini-pills {
+  display: none !important;
+  position: absolute;
+  left: 48px;
+  right: 47px;
+  top: 0;
+  height: 100%;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+.s2-mini-pills.active {
+  display: flex !important;
+}
+
+/* S2 小膠囊 padding 稍小確保均勻間距 */
+.s2-mini-pills .mini-pill {
+  padding: 0 12px;
+}
+
+/* Gmail icon 圓底 — 絕對定位在右側（與左側 AI icon left:11px 對稱） */
+.gmail-circle {
+  position: absolute;
+  right: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: none;
+}
+
+.gmail-circle.animate-in {
+  animation: gmailFadeIn 0.5s ease-out forwards;
+}
+
+.gmail-icon {
+  width: 22px;
+  height: 22px;
+}
+
+@keyframes gmailFadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 文字中的橘色粗體字（Time slots） */
+.chat-text .text-orange {
+  color: #E67E22;
+  font-weight: 700;
+}
+
+/* 行事曆 icon 圓底 — 絕對定位在右側（與左側 AI icon left:11px 對稱） */
+.calendar-circle {
+  position: absolute;
+  right: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: none;
+}
+
+
+.calendar-circle.animate-in {
+  animation: gmailFadeIn 0.5s ease-out forwards;
+}
+
+.calendar-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* S2 第四頁佈局 */
+#s2-pill-page-4 {
+  gap: 8px;
+  position: relative;
+}
+
+#s2-pill-page-4 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#s2-pill-page-4 .chat-text-wrapper {
+  flex: 1;
+  margin-left: 38px;
+  margin-right: 47px;
+}
+
+/* S2 第四頁右側 icon 插槽（絕對定位，與第三頁行事曆位置一致） */
+.s2-p4-icon-slot {
+  position: absolute;
+  right: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+}
+
+#s2-pill-page-4 .s2-p4-icon-slot .calendar-circle,
+#s2-pill-page-4 .s2-p4-icon-slot .checkmark-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: auto;
+  transform: none;
+}
+
+/* S2 第四頁行事曆一開始就顯示 */
+.s2-p4-icon-slot .calendar-circle {
+  opacity: 1;
+}
+
+/* 打勾圓底 */
+.checkmark-circle {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: none;
+}
+
+.checkmark-circle.animate-in {
+  animation: gmailFadeIn 0.5s ease-out forwards;
+}
+
+.checkmark-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* S2 第五頁佈局 */
+#s2-pill-page-5 {
+  gap: 8px;
+  position: relative;
+}
+
+#s2-pill-page-5 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#s2-pill-page-5 .chat-text-wrapper {
+  flex: 1;
+  margin-left: 38px;
+  margin-right: 47px;
+}
+
+#s2-pill-page-5 .s2-p5-text {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+}
+
+/* 第五頁文字由左到右消失動畫 */
+.s2-p5-text.wipe-out {
+  animation: textWipeOutLR 0.5s ease-in forwards !important;
+}
+
+@keyframes textWipeOutLR {
+  0%   { clip-path: inset(0 0 0 0);    opacity: 1; }
+  100% { clip-path: inset(0 0 0 100%); opacity: 0; }
+}
+
+/* 第五頁打勾初始可見 */
+.s2-p5-checkmark {
+  opacity: 1;
+}
+
+/* 第五頁打勾消失 */
+.s2-p5-checkmark.fade-out {
+  transition: opacity 0.3s ease-out;
+  opacity: 0;
+}
+
+/* 第五頁 icon slot（絕對定位，與第三、四頁右側 icon 位置一致） */
+.s2-p5-icon-slot {
+  position: absolute;
+  right: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+}
+
+#s2-pill-page-5 .s2-p5-icon-slot .checkmark-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: auto;
+  transform: none;
+}
+
+/* ========================================
+   Script 3 第二頁
+   ======================================== */
+
+/* S3 第二頁佈局 */
+#s3-pill-page-2 {
+  gap: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+#s3-pill-page-2 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+/* S3 內容區域 */
+.s3-content-area {
+  position: absolute;
+  left: 44px;
+  right: 8px;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* S3 各 group（堆疊，初始隱藏） */
+.s3-group {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Group B 左側 padding 3px → 灰色膠囊右移使 5 Jan 對齊 Group C（48px from pill left） */
+.s3-group-b {
+  padding: 0 0 0 3px;
+}
+
+/* Group C 右側留空給絕對定位的 18 circle */
+.s3-group-c {
+  padding-right: 44px;
+}
+
+/* Group C 的 5 Jan pill 從一開始就可見（覆蓋 .mini-pill 的預設隱藏） */
+.s3-group-c .mini-pill-s3-green-light {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.s3-group.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 群組淡入淡出 */
+.s3-group.fade-in {
+  animation: s3FadeIn 0.4s ease-out forwards;
+}
+.s3-group.fade-out {
+  animation: s3FadeOut 0.4s ease-out forwards;
+}
+/* 群組向右滑出 */
+.s3-group.slide-out-right {
+  animation: s3SlideOutRight 0.5s ease-in forwards;
+}
+
+@keyframes s3FadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes s3FadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes s3SlideOutRight {
+  0%   { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+
+/* ---- S3 Tracking 文字 ---- */
+.s3-tracking-text {
+  font-size: 16px;
+  color: #555;
+  white-space: nowrap;
+  opacity: 0;
+  clip-path: inset(0 100% 0 0);
+}
+
+.s3-tracking-text.reveal {
+  animation: s3TextReveal 0.6s ease-out forwards;
+}
+
+@keyframes s3TextReveal {
+  0%   { opacity: 0; clip-path: inset(0 100% 0 0); }
+  100% { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+
+/* ---- Tom pill（初始隱藏，由下彈入） ---- */
+.s3-tom-pill {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.s3-tom-pill.pop-in {
+  animation: s3PopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes s3PopIn {
+  0%   { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- 8 Feb 2026 黃色 pill（初始隱藏） ---- */
+.mini-pill-s3-yellow {
+  background: #E8C84D;
+  color: #fff;
+}
+
+.s3-feb-pill {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.s3-feb-pill.slide-in {
+  animation: s3SlideInLeft 0.4s ease-out forwards;
+}
+
+@keyframes s3SlideInLeft {
+  0%   { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ---- 5 Jan 淺綠色 pill ---- */
+.mini-pill-s3-green-light {
+  background: #6DC9A8;
+  color: #fff;
+}
+
+.s3-jan-pill {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.s3-jan-pill.pop-in {
+  animation: s3PopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ---- 灰色膠囊（Jan pill 絕對定位覆蓋在 bar 左上方） ---- */
+.s3-gray-capsule {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 1px 40px 1px 8px;
+  border-radius: 18px; /* 36px/2 → 左右半圓，與大膠囊(52px)同心 */
+  background: transparent;
+  box-shadow: none;
+  transition: background 0.4s ease-out, box-shadow 0.4s ease-out;
+}
+
+/* Jan pill 絕對定位在灰色膠囊左上方，覆蓋 bar 的左側 */
+/* left:1px = capsule-R(18) - pill-R(17)，左半圓同心 */
+/* 實際位置 = content-area(44) + group-b-padding(3) + 1 = 48px，與 Group C 一致 */
+.s3-gray-capsule .s3-jan-pill {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  z-index: 2;
+}
+
+/* 灰色膠囊背景淡入 */
+.s3-gray-capsule.show {
+  background: #c8c8c8;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+/* 灰色膠囊背景淡出（子元素不受影響） */
+.s3-gray-capsule.fade-bg {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* 灰色膠囊內的行事曆 icon（右側絕對定位） */
+.s3-capsule-calendar-icon {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+/* 行事曆隨膠囊顯示 */
+.s3-gray-capsule.show .s3-capsule-calendar-icon {
+  opacity: 0.6;
+}
+
+/* 行事曆隨膠囊淡出 */
+.s3-gray-capsule.fade-bg .s3-capsule-calendar-icon {
+  opacity: 0;
+}
+
+/* ---- ID Proposal 綠色 bar（灰色膠囊內，佔 4/5 寬度） ---- */
+.s3-proposal-bar {
+  position: relative;
+  flex-shrink: 0;
+  width: 88%; /* ≈ 4/5 灰色膠囊（88% of content ≈ 80% of capsule border-box） */
+  height: 34px;
+  max-width: 0;
+  border-radius: 17px; /* 固定值 = height/2，左右半圓不變 */
+  background: #4CAF8A;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  gap: 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: none;
+}
+
+/* bar 出場：從左往右長出來 */
+.s3-proposal-bar.grow {
+  animation: s3BarGrow 1.6s ease-out forwards;
+}
+
+@keyframes s3BarGrow {
+  0%   { max-width: 0; opacity: 0; padding: 0; }
+  100% { max-width: 600px; opacity: 1; padding: 0 7.5px; }
+}
+
+/* bar 用 clip-path 視覺縮小為圓（JS 控制） */
+.s3-proposal-bar.shrink-to-circle {
+  animation: none;
+}
+
+.s3-proposal-text {
+  flex: 1;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  text-align: center;
+  transition: opacity 0.3s;
+}
+
+.s3-proposal-text.show {
+  opacity: 1;
+}
+
+.s3-proposal-text.fade-out {
+  opacity: 0;
+}
+
+/* ---- 18 數字（在 ID Proposal bar 右端） ---- */
+.s3-number-18 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.s3-number-18.show {
+  opacity: 1;
+}
+
+/* ---- 階段 C：Final Proposal 深綠、CMF 藍、Artwork 紅 ---- */
+.mini-pill-s3-green-dark {
+  background: #4CAF8A;
+  color: #fff;
+}
+
+.mini-pill-s3-blue {
+  background: #5B9BD5;
+  color: #fff;
+}
+
+.mini-pill-s3-red {
+  background: #E06050;
+  color: #fff;
+}
+
+/* ---- Group C 依序出現的 pill（初始隱藏） ---- */
+.s3-seq-pill {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.s3-seq-pill.pop-in {
+  animation: s3PopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 18 圓形 pill（Group C，固定在右端） */
+.s3-circle-18 {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  background: #4CAF8A;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========================================
+   S3 第三頁：膠囊離場 + AI icon 退場 + COMPAL 淡入
+   ======================================== */
+
+/* S3 第三頁佈局 */
+#s3-pill-page-3 {
+  gap: 0;
+  position: relative;
+}
+
+/* S3 第三頁 AI icon 固定在左側 */
+#s3-pill-page-3 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--pill-padding);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* S3 第三頁小膠囊初始就可見 */
+#s3-pill-page-3 .mini-pill {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* S3 第三頁小膠囊容器（對齊 page 2 Group C 的位置） */
+.s3-p3-pills {
+  margin-left: 38px;
+  margin-right: 42px;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+/* S3 第三頁 18 圓形（絕對定位在右側，對齊 page 2） */
+.s3-p3-circle-18 {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
+  background: #4CAF8A;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* S3 第三頁 18 圓形退場 */
+.s3-p3-circle-18.slide-out {
+  animation: miniPillSlideDown 0.4s ease-in forwards;
+}
+
+/* ========================================
+   頁面控制按鈕
+   ======================================== */
+.controls {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+}
+
+.control-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #aaa;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.control-btn:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.page-indicator {
+  font-size: 14px;
+  color: #666;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ========================================
+   Script 4：即時語音對話
+   ======================================== */
+
+/* 麥克風按鈕容器 */
+.s4-mic-container {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 60px);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 100;
+}
+
+.s4-mic-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.s4-mic-btn:hover {
+  border-color: #4CAF8A;
+  background: rgba(255, 255, 255, 1);
+}
+
+.s4-mic-btn.recording {
+  border-color: #e53935;
+  background: rgba(229, 57, 53, 0.1);
+  box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.2);
+  animation: s4PulseRec 1.2s ease-in-out infinite;
+}
+
+@keyframes s4PulseRec {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.2); }
+  50%      { box-shadow: 0 0 0 8px rgba(229, 57, 53, 0.1); }
+}
+
+.s4-mic-icon {
+  width: 24px;
+  height: 24px;
+  color: #555;
+}
+
+.s4-mic-btn.recording .s4-mic-icon {
+  color: #e53935;
+}
+
+.s4-status {
+  font-size: 13px;
+  color: #888;
+  min-height: 18px;
+}

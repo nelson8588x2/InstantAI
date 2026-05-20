@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstantAI 互動簡報</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Script 選擇器 -->
+  <div class="script-selector">
+    <button class="script-btn active" data-script="1">Script 1</button>
+    <button class="script-btn" data-script="2">Script 2</button>
+    <button class="script-btn" data-script="3">Script 3</button>
+    <button class="script-btn" data-script="4">Script 4</button>
+  </div>
+
+  <!-- ============================================================
+       Script 1
+       ============================================================ -->
+  <div class="script-container active" data-script="1">
+    <div class="slideshow-container">
+
+      <!-- 固定膠囊容器 -->
+      <div class="pill">
+        <div class="pill-glow"></div>
+        <div class="pill-inner">
+
+          <!-- S1 第一頁：COMPAL Logo -->
+          <div class="pill-page active" id="s1-pill-page-1">
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img">
+          </div>
+
+          <!-- S1 第二頁：AI 助手對話 -->
+          <div class="pill-page" id="s1-pill-page-2">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon">
+            </div>
+            <div class="chat-text-wrapper">
+              <span class="chat-text">Hi Ana. How can I help you?</span>
+            </div>
+            <div class="mic-icon-wrapper">
+              <img src="images/mic-icon.svg" alt="Microphone" class="mic-icon">
+            </div>
+          </div>
+
+          <!-- S1 第三頁：三個彩色小膠囊 -->
+          <div class="pill-page" id="s1-pill-page-3">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon-static">
+            </div>
+            <div class="mini-pills-wrapper">
+              <div class="mini-pill mini-pill-red">
+                <span class="mini-pill-icon">&#128197;</span>
+                <span class="mini-pill-text">Meeting with Jenny</span>
+              </div>
+              <div class="mini-pill mini-pill-yellow">
+                <span class="mini-pill-icon">&#128722;</span>
+                <span class="mini-pill-text">Grocery</span>
+              </div>
+              <div class="mini-pill mini-pill-green">
+                <span class="mini-pill-icon">&#128222;</span>
+                <span class="mini-pill-text">Call Tom</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- S1 第四頁：離場 + COMPAL 淡入 -->
+          <div class="pill-page" id="s1-pill-page-4">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon-p4">
+            </div>
+            <div class="mini-pills-wrapper">
+              <div class="mini-pill mini-pill-red">
+                <span class="mini-pill-icon">&#128197;</span>
+                <span class="mini-pill-text">Meeting with Jenny</span>
+              </div>
+              <div class="mini-pill mini-pill-yellow">
+                <span class="mini-pill-icon">&#128722;</span>
+                <span class="mini-pill-text">Grocery</span>
+              </div>
+              <div class="mini-pill mini-pill-green">
+                <span class="mini-pill-icon">&#128222;</span>
+                <span class="mini-pill-text">Call Tom</span>
+              </div>
+            </div>
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img-p4">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- S1 背景頁 -->
+      <div class="slide active" id="s1-slide-1"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s1-slide-2"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s1-slide-3"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s1-slide-4"><div class="slide-content slide-cover"></div></div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Script 2
+       ============================================================ -->
+  <div class="script-container" data-script="2">
+    <div class="slideshow-container">
+
+      <!-- 固定膠囊容器 -->
+      <div class="pill">
+        <div class="pill-glow"></div>
+        <div class="pill-inner">
+
+          <!-- S2 第一頁：COMPAL Logo -->
+          <div class="pill-page active" id="s2-pill-page-1">
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img">
+          </div>
+
+          <!-- S2 第二頁：AI icon + 兩行文字 + 4 小膠囊 + Gmail icon -->
+          <div class="pill-page" id="s2-pill-page-2">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon">
+            </div>
+            <div class="s2-content-area">
+              <!-- 第一行文字 -->
+              <div class="chat-text-wrapper s2-text-line" id="s2-text-line1">
+                <span class="chat-text">Hi Anna, I just received an email from <strong class="text-white">Tom</strong></span>
+              </div>
+              <!-- 第二行文字 -->
+              <div class="chat-text-wrapper s2-text-line" id="s2-text-line2">
+                <span class="chat-text">about the <strong>Mockup release</strong> schedule for <strong class="text-white">February 8</strong>.</span>
+              </div>
+            </div>
+            <!-- 4 個小膠囊（獨立定位在 AI icon 和 Gmail 之間） -->
+            <div class="mini-pills-wrapper s2-mini-pills" id="s2-mini-pills">
+              <div class="mini-pill mini-pill-blue">
+                <span class="mini-pill-text">Tom</span>
+              </div>
+              <div class="mini-pill mini-pill-red">
+                <span class="mini-pill-text">Mockup</span>
+              </div>
+              <div class="mini-pill mini-pill-yellow">
+                <span class="mini-pill-text">Schedule</span>
+              </div>
+              <div class="mini-pill mini-pill-green">
+                <span class="mini-pill-text">Artwork/CMF</span>
+              </div>
+            </div>
+            <!-- Gmail icon 獨立在右側 -->
+            <div class="gmail-circle" id="s2-gmail-circle">
+              <img src="images/gmail-icon.svg" alt="Gmail" class="gmail-icon">
+            </div>
+          </div>
+
+          <!-- S2 第三頁：AI icon + 兩行文字 + 3 小膠囊 + 行事曆 icon -->
+          <div class="pill-page" id="s2-pill-page-3">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon-static">
+            </div>
+            <div class="s2-content-area">
+              <!-- 第一行文字 -->
+              <div class="chat-text-wrapper s2-text-line" id="s2-p3-text-line1">
+                <span class="chat-text">It outlines the <strong class="text-orange">Time slots</strong> for <strong>generating</strong> and <strong>delivering</strong></span>
+              </div>
+              <!-- 第二行文字 -->
+              <div class="chat-text-wrapper s2-text-line" id="s2-p3-text-line2">
+                <span class="chat-text">the rendering images, plus a final proposal review checkpoint.</span>
+              </div>
+            </div>
+            <!-- 3 個小膠囊（獨立定位在 AI icon 和行事曆之間） -->
+            <div class="mini-pills-wrapper s2-mini-pills" id="s2-p3-mini-pills">
+              <div class="mini-pill mini-pill-s2-teal">
+                <span class="mini-pill-text">Rendering</span>
+              </div>
+              <div class="mini-pill mini-pill-s2-teal">
+                <span class="mini-pill-text">Final Proposal</span>
+              </div>
+              <div class="mini-pill mini-pill-s2-teal-light">
+                <span class="mini-pill-text">Checkpoint</span>
+              </div>
+            </div>
+            <!-- 行事曆 icon 獨立在右側 -->
+            <div class="calendar-circle" id="s2-calendar-circle">
+              <img src="images/calendar-icon.svg" alt="Calendar" class="calendar-icon">
+            </div>
+          </div>
+
+          <!-- S2 第四頁：鈴聲+光效 → 語音+文字+光效 → 右側行事曆 → 被打勾取代+音效 → 問句+光效 -->
+          <div class="pill-page" id="s2-pill-page-4">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon-static">
+            </div>
+            <div class="chat-text-wrapper" id="s2-p4-text-line1">
+              <span class="chat-text">I'll add the schedule and set a reminder for you.</span>
+            </div>
+            <!-- 右側圓底：行事曆 → 打勾（同位置切換） -->
+            <div class="s2-p4-icon-slot" id="s2-p4-icon-slot">
+              <div class="calendar-circle" id="s2-p4-calendar">
+                <img src="images/calendar-icon.svg" alt="Calendar" class="calendar-icon">
+              </div>
+              <div class="checkmark-circle" id="s2-p4-checkmark">
+                <img src="images/checkmark-anim.svg" alt="Done" class="checkmark-icon">
+              </div>
+            </div>
+          </div>
+
+          <!-- S2 第五頁：文字由左到右消失 + 鈴聲 + 語音 + AI icon 離場 + COMPAL 淡入 -->
+          <div class="pill-page" id="s2-pill-page-5">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon-p4">
+            </div>
+            <div class="chat-text-wrapper" id="s2-p5-text-line">
+              <span class="chat-text s2-p5-text">I'll add the schedule and set a reminder for you.</span>
+            </div>
+            <!-- 右側打勾 icon（延續第四頁結尾狀態） -->
+            <div class="s2-p4-icon-slot s2-p5-icon-slot">
+              <div class="checkmark-circle s2-p5-checkmark">
+                <img src="images/checkmark-anim.svg" alt="Done" class="checkmark-icon">
+              </div>
+            </div>
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img-p4">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- S2 背景頁 -->
+      <div class="slide active" id="s2-slide-1"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s2-slide-2"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s2-slide-3"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s2-slide-4"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s2-slide-5"><div class="slide-content slide-cover"></div></div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Script 3
+       ============================================================ -->
+  <div class="script-container" data-script="3">
+    <div class="slideshow-container">
+
+      <!-- 固定膠囊容器 -->
+      <div class="pill">
+        <div class="pill-glow"></div>
+        <div class="pill-inner">
+
+          <!-- S3 第一頁：COMPAL Logo -->
+          <div class="pill-page active" id="s3-pill-page-1">
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img">
+          </div>
+
+          <!-- S3 第二頁：完整動畫序列 -->
+          <div class="pill-page" id="s3-pill-page-2">
+            <!-- AI icon 固定左側 -->
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon">
+            </div>
+
+            <!-- 內容區域（overflow hidden，用於水平滑動） -->
+            <div class="s3-content-area" id="s3-content-area">
+
+              <!-- 階段 A：Tom pill + "Tracking Mockup schedule." 文字 + 8 Feb 2026 pill -->
+              <div class="s3-group s3-group-a" id="s3-group-a">
+                <div class="mini-pill mini-pill-blue s3-tom-pill" id="s3-tom-pill">
+                  <span class="mini-pill-text">Tom</span>
+                </div>
+                <div class="mini-pill mini-pill-s3-yellow s3-feb-pill" id="s3-feb-pill">
+                  <span class="mini-pill-text">8 Feb 2026</span>
+                </div>
+                <span class="s3-tracking-text" id="s3-tracking-text">Tracking Mockup schedule.</span>
+              </div>
+
+              <!-- 階段 B：灰色膠囊（內含 Jan 5 pill + 行事曆 icon + ID Proposal bar） -->
+              <div class="s3-group s3-group-b" id="s3-group-b">
+                <div class="s3-gray-capsule" id="s3-gray-capsule">
+                  <div class="mini-pill mini-pill-s3-green-light s3-jan-pill" id="s3-jan-pill">
+                    <span class="mini-pill-text">5 Jan</span>
+                  </div>
+                  <img src="images/calendar-icon.svg" alt="Calendar" class="s3-capsule-calendar-icon">
+                  <div class="s3-proposal-bar" id="s3-proposal-bar">
+                    <span class="s3-proposal-text">ID Proposal</span>
+                    <span class="s3-number-18" id="s3-number-18">18</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 階段 C：5 Jan pill + Final Proposal + CMF + Artwork + 18 圓形 pill -->
+              <div class="s3-group s3-group-c" id="s3-group-c">
+                <!-- 5 Jan 一開始就顯示 -->
+                <div class="mini-pill mini-pill-s3-green-light">
+                  <span class="mini-pill-text">5 Jan</span>
+                </div>
+                <!-- 以下依序出現 -->
+                <div class="mini-pill mini-pill-s3-green-dark s3-seq-pill" id="s3-c-final">
+                  <span class="mini-pill-text">Final Proposal</span>
+                </div>
+                <div class="mini-pill mini-pill-s3-blue s3-seq-pill" id="s3-c-cmf">
+                  <span class="mini-pill-text">CMF</span>
+                </div>
+                <div class="mini-pill mini-pill-s3-red s3-seq-pill" id="s3-c-artwork">
+                  <span class="mini-pill-text">Artwork</span>
+                </div>
+                <div class="s3-circle-18" id="s3-circle-18">
+                  <span>18</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- S3 第三頁：膠囊依序離場 + AI icon 退場 + COMPAL 淡入 -->
+          <div class="pill-page" id="s3-pill-page-3">
+            <div class="ai-icon-wrapper">
+              <img src="images/sparkle-icon-512x512.png" alt="AI" class="ai-icon-p4 s3-ai-icon-p3">
+            </div>
+            <div class="mini-pills-wrapper s3-p3-pills">
+              <div class="mini-pill mini-pill-s3-green-light">
+                <span class="mini-pill-text">5 Jan</span>
+              </div>
+              <div class="mini-pill mini-pill-s3-green-dark">
+                <span class="mini-pill-text">Final Proposal</span>
+              </div>
+              <div class="mini-pill mini-pill-s3-blue">
+                <span class="mini-pill-text">CMF</span>
+              </div>
+              <div class="mini-pill mini-pill-s3-red">
+                <span class="mini-pill-text">Artwork</span>
+              </div>
+            </div>
+            <div class="s3-p3-circle-18">
+              <span>18</span>
+            </div>
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img-p4 s3-logo-p3">
+          </div>
+
+        </div>
+      </div>
+
+      <!-- S3 背景頁 -->
+      <div class="slide active" id="s3-slide-1"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s3-slide-2"><div class="slide-content slide-cover"></div></div>
+      <div class="slide" id="s3-slide-3"><div class="slide-content slide-cover"></div></div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       Script 4：即時語音對話（Gemini Live API）
+       ============================================================ -->
+  <div class="script-container" data-script="4">
+    <div class="slideshow-container">
+      <div class="pill">
+        <div class="pill-glow"></div>
+        <div class="pill-inner">
+          <div class="pill-page active" id="s4-pill-page-1">
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img">
+          </div>
+        </div>
+      </div>
+      <!-- 麥克風按鈕（膠囊下方） -->
+      <div class="s4-mic-container">
+        <button class="s4-mic-btn" id="s4-mic-btn" title="按住說話">
+          <svg class="s4-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="1" width="6" height="12" rx="3"/>
+            <path d="M5 10a7 7 0 0 0 14 0"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+          </svg>
+        </button>
+        <span class="s4-status" id="s4-status"></span>
+      </div>
+      <div class="slide active" id="s4-slide-1"><div class="slide-content slide-cover"></div></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       共用音效（audio/sfx/）
+       ============================================================ -->
+  <audio id="sfx-icon-appear" preload="auto">
+    <source src="audio/sfx/icon-appear.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="sfx-notification-bell" preload="auto">
+    <source src="audio/sfx/notification-bell.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="sfx-bloop" preload="auto">
+    <source src="audio/sfx/bloop.wav" type="audio/wav">
+  </audio>
+  <audio id="sfx-gmail-notify" preload="auto">
+    <source src="audio/sfx/gmail-notify.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Script 1 人聲（audio/voice/） -->
+  <audio id="s1-sfx-voice-greeting" preload="auto">
+    <source src="audio/voice/s1-greeting.wav" type="audio/wav">
+  </audio>
+  <audio id="s1-sfx-voice-transition-p2p3" preload="auto">
+    <source src="audio/voice/s1-transition.wav" type="audio/wav">
+  </audio>
+  <audio id="s1-sfx-voice-page3-first" preload="auto">
+    <source src="audio/voice/s1-schedule-1.wav" type="audio/wav">
+  </audio>
+  <audio id="s1-sfx-voice-page3-second" preload="auto">
+    <source src="audio/voice/s1-schedule-2.wav" type="audio/wav">
+  </audio>
+  <audio id="s1-sfx-voice-page3-third" preload="auto">
+    <source src="audio/voice/s1-schedule-3.wav" type="audio/wav">
+  </audio>
+  <audio id="s1-sfx-voice-page3-closing" preload="auto">
+    <source src="audio/voice/s1-closing.wav" type="audio/wav">
+  </audio>
+  <audio id="s1-sfx-voice-page4" preload="auto">
+    <source src="audio/voice/s1-farewell.wav" type="audio/wav">
+  </audio>
+
+  <!-- Script 2 人聲 + 專用音效 -->
+  <audio id="s2-sfx-voice-greeting" preload="auto">
+    <source src="audio/voice/s2-greeting.wav" type="audio/wav">
+  </audio>
+  <audio id="s2-sfx-voice-details-q" preload="auto">
+    <source src="audio/voice/s2-details-question.wav" type="audio/wav">
+  </audio>
+  <audio id="s2-sfx-voice-page3" preload="auto">
+    <source src="audio/voice/s2-details-answer.wav" type="audio/wav">
+  </audio>
+  <audio id="s2-sfx-voice-calendar-q" preload="auto">
+    <source src="audio/voice/s2-calendar-question.wav" type="audio/wav">
+  </audio>
+  <audio id="s2-sfx-bell" preload="auto">
+    <source src="audio/sfx/notification-bell.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="s2-sfx-voice-page4" preload="auto">
+    <source src="audio/voice/s2-calendar-confirm.wav" type="audio/wav">
+  </audio>
+  <audio id="s2-sfx-checkmark" preload="auto">
+    <source src="audio/sfx/checkmark.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="s2-sfx-voice-anything-else" preload="auto">
+    <source src="audio/voice/s2-anything-else.wav" type="audio/wav">
+  </audio>
+  <audio id="s2-sfx-voice-page5" preload="auto">
+    <source src="audio/voice/s2-farewell.wav" type="audio/wav">
+  </audio>
+
+  <!-- Script 3 人聲 + 專用音效 -->
+  <audio id="s3-sfx-voice-part1" preload="auto">
+    <source src="audio/voice/s3-part1.wav" type="audio/wav">
+  </audio>
+  <audio id="s3-sfx-voice-part2" preload="auto">
+    <source src="audio/voice/s3-part2.wav" type="audio/wav">
+  </audio>
+  <audio id="s3-sfx-voice-part3" preload="auto">
+    <source src="audio/voice/s3-part3.wav" type="audio/wav">
+  </audio>
+  <audio id="s3-sfx-voice-anything-else" preload="auto">
+    <source src="audio/voice/s3-anything-else.wav" type="audio/wav">
+  </audio>
+  <audio id="s3-sfx-bell" preload="auto">
+    <source src="audio/sfx/notification-bell.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="s3-sfx-voice-part4" preload="auto">
+    <source src="audio/voice/s3-farewell.wav" type="audio/wav">
+  </audio>
+
+  <!-- 頁面控制按鈕 -->
+  <div class="controls">
+    <button id="btn-prev" class="control-btn" title="上一頁">&#10094;</button>
+    <span id="page-indicator" class="page-indicator">1 / 1</span>
+    <button id="btn-next" class="control-btn" title="下一頁">&#10095;</button>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/gemini-live.js"></script>
+  <script src="js/slideshow.js"></script>
+</body>
+</html>

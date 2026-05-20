@@ -1,0 +1,14 @@
+# 敏感設定
+.env
+js/config.js
+
+# IDE / 系統
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Node（若未來有用到）
+node_modules/

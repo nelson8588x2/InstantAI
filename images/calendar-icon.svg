@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- 圓角外框 -->
+  <rect x="20" y="20" width="160" height="160" rx="20" ry="20" fill="#4285F4"/>
+  <!-- 白色內框 -->
+  <rect x="30" y="50" width="140" height="120" rx="8" ry="8" fill="#fff"/>
+  <!-- 頂部藍色條 -->
+  <rect x="30" y="20" width="140" height="35" rx="8" ry="8" fill="#4285F4"/>
+  <!-- 日期數字 31 -->
+  <text x="100" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#4285F4">31</text>
+  <!-- 左上角黃色塊 -->
+  <rect x="20" y="20" width="20" height="30" rx="4" ry="4" fill="#F4B400"/>
+  <!-- 右上角綠色塊 -->
+  <rect x="160" y="20" width="20" height="30" rx="4" ry="4" fill="#0F9D58"/>
+  <!-- 掛環左 -->
+  <rect x="60" y="10" width="8" height="25" rx="4" fill="#546E7A"/>
+  <!-- 掛環右 -->
+  <rect x="132" y="10" width="8" height="25" rx="4" fill="#546E7A"/>
+</svg>
