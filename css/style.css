@@ -516,9 +516,21 @@ html, body {
   font-weight: 700;
 }
 
-/* 文字中的深色粗體字（Mockup release） */
+/* 文字中的白色粗體字（Tom、February 8） */
 .chat-text .text-white {
-  color: #262626;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* 文字中的深色粗體字（Mockup release） */
+.chat-text .text-dark {
+  color: #404040;
+  font-weight: 700;
+}
+
+/* 文字中的灰色粗體字（generating、delivering） */
+.chat-text .text-gray-bold {
+  color: #868686;
   font-weight: 700;
 }
 
@@ -620,7 +632,7 @@ html, body {
 
 /* 文字中的深色粗體字（Time slots） */
 .chat-text .text-orange {
-  color: #262626;
+  color: #404040;
   font-weight: 700;
 }
 
@@ -1096,7 +1108,7 @@ html, body {
   width: 34px;
   height: 34px;
   border-radius: 17px;
-  background: #4CAF8A;
+  background: #7bd0a9;
   color: #fff;
   font-size: 16px;
   font-weight: 700;
@@ -1146,7 +1158,7 @@ html, body {
   width: 34px;
   height: 34px;
   border-radius: 17px;
-  background: #4CAF8A;
+  background: #7bd0a9;
   color: #fff;
   font-size: 16px;
   font-weight: 700;
