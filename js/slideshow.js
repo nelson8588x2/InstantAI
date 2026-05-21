@@ -323,50 +323,55 @@
       if (page2) page2.classList.add('active');
       if (page3) page3.classList.remove('active');
 
+      // 步驟 1：鈴聲 + 光效
       playAudio('sfx-notification-bell');
       const pg = getPillGlow();
       if (pg) pg.classList.add('active');
-      const transitionPlaying = playAudio('s1-sfx-voice-transition-p2p3');
 
-      if (transitionPlaying && transitionAudioEl) {
-        startGlowWithAudio(transitionAudioEl);
+      // 步驟 2：800ms 後播放語音
+      setTimeout(() => {
+        const transitionPlaying = playAudio('s1-sfx-voice-transition-p2p3');
 
-        const startTextFadeout = () => {
-          const dur = transitionAudioEl.duration;
-          if (chatText) {
-            const fadeDur = (dur && isFinite(dur)) ? Math.min(dur, 0.5) : 0.5;
-            chatText.style.setProperty('--fadeout-duration', fadeDur + 's');
-            chatText.style.opacity = '1';
-            chatText.style.clipPath = 'inset(0 0 0 0)';
-            chatText.classList.remove('animate-in');
-            chatText.classList.add('animate-out');
+        if (transitionPlaying && transitionAudioEl) {
+          startGlowWithAudio(transitionAudioEl);
+
+          const startTextFadeout = () => {
+            const dur = transitionAudioEl.duration;
+            if (chatText) {
+              const fadeDur = (dur && isFinite(dur)) ? Math.min(dur, 0.5) : 0.5;
+              chatText.style.setProperty('--fadeout-duration', fadeDur + 's');
+              chatText.style.opacity = '1';
+              chatText.style.clipPath = 'inset(0 0 0 0)';
+              chatText.classList.remove('animate-in');
+              chatText.classList.add('animate-out');
+            }
+          };
+
+          if (transitionAudioEl.duration && isFinite(transitionAudioEl.duration)) {
+            startTextFadeout();
+          } else {
+            transitionAudioEl.addEventListener('loadedmetadata', startTextFadeout, { once: true });
+            setTimeout(() => { if (chatText && !chatText.classList.contains('animate-out')) startTextFadeout(); }, 300);
           }
-        };
 
-        if (transitionAudioEl.duration && isFinite(transitionAudioEl.duration)) {
-          startTextFadeout();
+          transitionAudioEl.onended = () => {
+            stopGlow();
+            if (micIcon2) { micIcon2.style.transition = 'opacity 0.3s ease-out'; micIcon2.style.opacity = '0'; }
+            setTimeout(() => { s1.startPhase2(page2, page3); }, 400);
+          };
+          transitionAudioEl.onpause = () => { stopGlow(); };
         } else {
-          transitionAudioEl.addEventListener('loadedmetadata', startTextFadeout, { once: true });
-          setTimeout(() => { if (chatText && !chatText.classList.contains('animate-out')) startTextFadeout(); }, 300);
+          if (chatText) {
+            chatText.style.opacity = '1'; chatText.style.clipPath = 'inset(0 0 0 0)';
+            chatText.classList.remove('animate-in'); chatText.classList.add('animate-out');
+          }
+          setTimeout(() => {
+            stopGlow();
+            if (micIcon2) { micIcon2.style.transition = 'opacity 0.3s ease-out'; micIcon2.style.opacity = '0'; }
+            setTimeout(() => { s1.startPhase2(page2, page3); }, 400);
+          }, 1500);
         }
-
-        transitionAudioEl.onended = () => {
-          stopGlow();
-          if (micIcon2) { micIcon2.style.transition = 'opacity 0.3s ease-out'; micIcon2.style.opacity = '0'; }
-          setTimeout(() => { s1.startPhase2(page2, page3); }, 400);
-        };
-        transitionAudioEl.onpause = () => { stopGlow(); };
-      } else {
-        if (chatText) {
-          chatText.style.opacity = '1'; chatText.style.clipPath = 'inset(0 0 0 0)';
-          chatText.classList.remove('animate-in'); chatText.classList.add('animate-out');
-        }
-        setTimeout(() => {
-          stopGlow();
-          if (micIcon2) { micIcon2.style.transition = 'opacity 0.3s ease-out'; micIcon2.style.opacity = '0'; }
-          setTimeout(() => { s1.startPhase2(page2, page3); }, 400);
-        }, 1500);
-      }
+      }, 800);
     },
 
     startPhase2(page2, page3) {
@@ -434,31 +439,36 @@
 
       isAnimating = true;
 
+      // 步驟 1：鈴聲 + 光效
       playAudio('sfx-notification-bell');
       const pg = getPillGlow();
       if (pg) pg.classList.add('active');
-      const voicePlaying = playAudio('s1-sfx-voice-page4');
 
-      if (voicePlaying && sfxVoiceEl) {
-        startGlowWithAudio(sfxVoiceEl);
-        const startPillExit = () => {
-          const duration = sfxVoiceEl.duration;
-          const pillDelay = (duration && isFinite(duration))
-            ? Math.min((duration * 1000 * 0.5) / miniPills.length, 300) : 200;
+      // 步驟 2：800ms 後播放語音
+      setTimeout(() => {
+        const voicePlaying = playAudio('s1-sfx-voice-page4');
+
+        if (voicePlaying && sfxVoiceEl) {
+          startGlowWithAudio(sfxVoiceEl);
+          const startPillExit = () => {
+            const duration = sfxVoiceEl.duration;
+            const pillDelay = (duration && isFinite(duration))
+              ? Math.min((duration * 1000 * 0.5) / miniPills.length, 300) : 200;
+            miniPills.forEach((pill, i) => { setTimeout(() => { pill.classList.add('slide-out'); }, pillDelay * i); });
+          };
+          if (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) { startPillExit(); }
+          else {
+            sfxVoiceEl.addEventListener('loadedmetadata', startPillExit, { once: true });
+            setTimeout(() => { if (!miniPills[0].classList.contains('slide-out')) startPillExit(); }, 300);
+          }
+          sfxVoiceEl.onended = () => { stopGlow(); s1.startPage4IconExit(aiIcon, logo, page4); };
+          sfxVoiceEl.onpause = () => { stopGlow(); };
+        } else {
+          const pillDelay = 200;
           miniPills.forEach((pill, i) => { setTimeout(() => { pill.classList.add('slide-out'); }, pillDelay * i); });
-        };
-        if (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) { startPillExit(); }
-        else {
-          sfxVoiceEl.addEventListener('loadedmetadata', startPillExit, { once: true });
-          setTimeout(() => { if (!miniPills[0].classList.contains('slide-out')) startPillExit(); }, 300);
+          setTimeout(() => { stopGlow(); s1.startPage4IconExit(aiIcon, logo, page4); }, pillDelay * miniPills.length + 400);
         }
-        sfxVoiceEl.onended = () => { stopGlow(); s1.startPage4IconExit(aiIcon, logo, page4); };
-        sfxVoiceEl.onpause = () => { stopGlow(); };
-      } else {
-        const pillDelay = 200;
-        miniPills.forEach((pill, i) => { setTimeout(() => { pill.classList.add('slide-out'); }, pillDelay * i); });
-        setTimeout(() => { stopGlow(); s1.startPage4IconExit(aiIcon, logo, page4); }, pillDelay * miniPills.length + 400);
-      }
+      }, 800);
     },
 
     startPage4IconExit(aiIcon, logo, page4) {
@@ -1440,17 +1450,19 @@
         playBloop();
       }, 200);
 
-      // 語音 "CMF" (~2800ms) → CMF 彈入（無音效）
+      // 語音 "CMF" (~3000ms) → CMF 彈入 + 音效
       setTimeout(() => {
         const el = document.getElementById('s3-c-cmf');
         if (el) el.classList.add('pop-in');
-      }, 2800);
+        playBloop();
+      }, 3000);
 
-      // 語音 "artwork" (~3400ms) → Artwork 彈入（無音效）
+      // 語音 "artwork" (~3800ms) → Artwork 彈入 + 音效
       setTimeout(() => {
         const el = document.getElementById('s3-c-artwork');
         if (el) el.classList.add('pop-in');
-      }, 3400);
+        playBloop();
+      }, 3800);
 
       // 語音接近結尾 (~4200ms) → 18 圓形 pill 彈入
       setTimeout(() => {
@@ -1501,8 +1513,8 @@
       const pg = getPillGlow();
       if (pg) pg.classList.add('active');
 
-      // 300ms 後播放語音 part4
-      setTimeout(() => { s3.playVoice4(); }, 300);
+      // 800ms 後播放語音 part4
+      setTimeout(() => { s3.playVoice4(); }, 800);
     },
 
     /* ---------------------------------------------------------------
