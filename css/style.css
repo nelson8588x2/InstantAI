@@ -35,11 +35,11 @@ html, body {
 }
 
 .script-btn {
-  padding: 6px 16px;
+  padding: 10px 22px;
   border: 1px solid #aaa;
-  border-radius: 20px;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s;
   color: #555;
@@ -1187,12 +1187,12 @@ html, body {
 }
 
 .control-btn {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   border: 1px solid #aaa;
   background: rgba(255, 255, 255, 0.8);
-  font-size: 18px;
+  font-size: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1205,7 +1205,7 @@ html, body {
 }
 
 .page-indicator {
-  font-size: 14px;
+  font-size: 18px;
   color: #666;
   -webkit-user-select: none;
   user-select: none;

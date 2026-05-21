@@ -324,6 +324,8 @@
       if (page3) page3.classList.remove('active');
 
       playAudio('sfx-notification-bell');
+      const pg = getPillGlow();
+      if (pg) pg.classList.add('active');
       const transitionPlaying = playAudio('s1-sfx-voice-transition-p2p3');
 
       if (transitionPlaying && transitionAudioEl) {
@@ -359,8 +361,6 @@
           chatText.style.opacity = '1'; chatText.style.clipPath = 'inset(0 0 0 0)';
           chatText.classList.remove('animate-in'); chatText.classList.add('animate-out');
         }
-        const pg = getPillGlow();
-        if (pg) pg.classList.add('active');
         setTimeout(() => {
           stopGlow();
           if (micIcon2) { micIcon2.style.transition = 'opacity 0.3s ease-out'; micIcon2.style.opacity = '0'; }
@@ -435,6 +435,8 @@
       isAnimating = true;
 
       playAudio('sfx-notification-bell');
+      const pg = getPillGlow();
+      if (pg) pg.classList.add('active');
       const voicePlaying = playAudio('s1-sfx-voice-page4');
 
       if (voicePlaying && sfxVoiceEl) {
@@ -453,8 +455,6 @@
         sfxVoiceEl.onended = () => { stopGlow(); s1.startPage4IconExit(aiIcon, logo, page4); };
         sfxVoiceEl.onpause = () => { stopGlow(); };
       } else {
-        const pg = getPillGlow();
-        if (pg) pg.classList.add('active');
         const pillDelay = 200;
         miniPills.forEach((pill, i) => { setTimeout(() => { pill.classList.add('slide-out'); }, pillDelay * i); });
         setTimeout(() => { stopGlow(); s1.startPage4IconExit(aiIcon, logo, page4); }, pillDelay * miniPills.length + 400);
@@ -694,7 +694,13 @@
 
       isAnimating = true;
 
-      // 語音開始 + 第一行文字
+      // 步驟 1：鈴聲 + 光效
+      playAudio('s2-sfx-bell');
+      const pg = getPillGlow();
+      if (pg) pg.classList.add('active');
+
+      // 步驟 2：800ms 後語音開始 + 第一行文字
+      setTimeout(() => {
       if (line1) line1.classList.add('active');
       const voicePlaying = playAudio('s2-sfx-voice-page3');
 
@@ -756,13 +762,12 @@
       } else {
         // 無語音備用
         if (chatText1) chatText1.classList.add('animate-in');
-        const pg = getPillGlow();
-        if (pg) pg.classList.add('active');
         setTimeout(() => {
           stopGlow();
           s2.afterGreetingEnded(chatText1, line1, calCircle, pillsWrap, 's2-sfx-voice-calendar-q');
         }, 3000);
       }
+      }, 800);
     },
 
     /* ---------------------------------------------------------------
@@ -963,9 +968,14 @@
         replayCheckmark(() => {
           // 第二次完成後重播第三次
           replayCheckmark(() => {
-            // 全部完成 → 問句語音 + 光效
+            // 全部完成 → 鈴聲 + 光效 → 800ms 後問句語音
             setTimeout(() => {
-              s2.playQuestion('s2-sfx-voice-anything-else');
+              playAudio('s2-sfx-bell');
+              const pg = getPillGlow();
+              if (pg) pg.classList.add('active');
+              setTimeout(() => {
+                s2.playQuestion('s2-sfx-voice-anything-else');
+              }, 800);
             }, 300);
           });
         });
@@ -1032,36 +1042,40 @@
       if (textEl) textEl.classList.add('wipe-out');
       if (checkEl) checkEl.classList.add('fade-out');
 
-      // 同時播放鈴聲 + 語音 + 光效
+      // 步驟 1：鈴聲 + 光效
       playAudio('s2-sfx-bell');
-      const voicePlaying = playAudio('s2-sfx-voice-page5');
+      const pg = getPillGlow();
+      if (pg) pg.classList.add('active');
 
-      if (voicePlaying && sfxVoiceEl) {
-        startGlowWithAudio(sfxVoiceEl);
-        sfxVoiceEl.onended = () => {
-          stopGlow();
-          // 語音結束 → AI icon 旋轉縮小離場（同 S1 startPage4IconExit）
-          if (aiIcon) aiIcon.classList.add('exit');
+      // 步驟 2：800ms 後播放語音
+      setTimeout(() => {
+        const voicePlaying = playAudio('s2-sfx-voice-page5');
+
+        if (voicePlaying && sfxVoiceEl) {
+          startGlowWithAudio(sfxVoiceEl);
+          sfxVoiceEl.onended = () => {
+            stopGlow();
+            // 語音結束 → AI icon 旋轉縮小離場
+            if (aiIcon) aiIcon.classList.add('exit');
+            setTimeout(() => {
+              if (aiWrapper) aiWrapper.style.display = 'none';
+              if (logo) logo.classList.add('fade-in');
+              setTimeout(() => { isAnimating = false; }, 600);
+            }, 650);
+          };
+          sfxVoiceEl.onpause = () => { stopGlow(); };
+        } else {
           setTimeout(() => {
-            if (aiWrapper) aiWrapper.style.display = 'none';
-            if (logo) logo.classList.add('fade-in');
-            setTimeout(() => { isAnimating = false; }, 600);
-          }, 650);
-        };
-        sfxVoiceEl.onpause = () => { stopGlow(); };
-      } else {
-        const pg = getPillGlow();
-        if (pg) pg.classList.add('active');
-        setTimeout(() => {
-          stopGlow();
-          if (aiIcon) aiIcon.classList.add('exit');
-          setTimeout(() => {
-            if (aiWrapper) aiWrapper.style.display = 'none';
-            if (logo) logo.classList.add('fade-in');
-            setTimeout(() => { isAnimating = false; }, 600);
-          }, 650);
-        }, 2000);
-      }
+            stopGlow();
+            if (aiIcon) aiIcon.classList.add('exit');
+            setTimeout(() => {
+              if (aiWrapper) aiWrapper.style.display = 'none';
+              if (logo) logo.classList.add('fade-in');
+              setTimeout(() => { isAnimating = false; }, 600);
+            }, 650);
+          }, 2000);
+        }
+      }, 800);
     },
 
     animations: {
@@ -1216,28 +1230,31 @@
         voice1El.onpause = () => { stopGlow(); };
       }
 
-      // 語音開始 300ms：顯示 Group A + Tom pill 彈入
+      // 語音開始 300ms：顯示 Group A 容器
       setTimeout(() => {
         const groupA = document.getElementById('s3-group-a');
         if (groupA) { groupA.classList.add('active', 'fade-in'); }
+      }, 300);
 
+      // 語音說到 "Tom" (~1.5s)：Tom pill 彈入
+      setTimeout(() => {
         const tomPill = document.getElementById('s3-tom-pill');
         if (tomPill) tomPill.classList.add('pop-in');
         playBloop();
-      }, 300);
+      }, 1500);
 
-      // 語音開始 800ms：文字由左到右出現
+      // Tom pill 出現後 500ms：tracking 文字由左到右出現
       setTimeout(() => {
         const trackText = document.getElementById('s3-tracking-text');
         if (trackText) trackText.classList.add('reveal');
-      }, 800);
+      }, 2000);
 
-      // 語音大約 3s 時（說到 February 8th）：8 Feb pill 滑入
+      // 語音說到 "February" (~4.5s)：8 Feb pill 滑入
       setTimeout(() => {
         const febPill = document.getElementById('s3-feb-pill');
         if (febPill) febPill.classList.add('slide-in');
         playBloop();
-      }, 3000);
+      }, 4500);
 
       // 安全 fallback（6 秒）
       setTimeout(() => { onEnd(); }, 6000);
@@ -1311,11 +1328,11 @@
         if (barText) barText.classList.add('show');
       }, 1800);
 
-      // 2500ms（語音說到 18th 時）：18 數字出現
+      // 3500ms（語音說到 18th 時）：18 數字出現
       setTimeout(() => {
         const num18 = document.getElementById('s3-number-18');
         if (num18) num18.classList.add('show');
-      }, 2500);
+      }, 3500);
 
       // 安全 fallback（5 秒）
       setTimeout(() => { onEnd(); }, 5000);
@@ -1449,17 +1466,27 @@
        最後一段：Is there anything else I can help you with?
        --------------------------------------------------------------- */
     playAnythingElse() {
-      const voiceEl = document.getElementById('s3-sfx-voice-anything-else');
-      const played = playAudio('s3-sfx-voice-anything-else');
+      // 先播放鈴聲 + 光效
+      playAudio('s3-sfx-bell');
+      const pg = getPillGlow();
+      if (pg) pg.classList.add('active');
 
-      if (played && voiceEl) {
-        startGlowWithAudio(voiceEl);
-        voiceEl.onended = () => { stopGlow(); isAnimating = false; };
-        voiceEl.onpause = () => { stopGlow(); };
-      }
+      // 800ms 後播放語音（與 S2 page4 停頓一致）
+      setTimeout(() => {
+        const voiceEl = document.getElementById('s3-sfx-voice-anything-else');
+        const played = playAudio('s3-sfx-voice-anything-else');
+
+        if (played && voiceEl) {
+          startGlowWithAudio(voiceEl);
+          voiceEl.onended = () => { stopGlow(); isAnimating = false; };
+          voiceEl.onpause = () => { stopGlow(); };
+        } else {
+          setTimeout(() => { stopGlow(); isAnimating = false; }, 2000);
+        }
+      }, 800);
 
       // fallback
-      setTimeout(() => { stopGlow(); isAnimating = false; }, 4000);
+      setTimeout(() => { stopGlow(); isAnimating = false; }, 5000);
     },
 
     /* ---------------------------------------------------------------
@@ -1469,8 +1496,10 @@
       const page3 = document.getElementById('s3-pill-page-3');
       if (!page3) return;
 
-      // 播放 notification bell
+      // 播放 notification bell + 光效
       playAudio('s3-sfx-bell');
+      const pg = getPillGlow();
+      if (pg) pg.classList.add('active');
 
       // 300ms 後播放語音 part4
       setTimeout(() => { s3.playVoice4(); }, 300);
