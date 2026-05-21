@@ -80,6 +80,9 @@
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().catch(() => {});
+    }
 
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
@@ -419,6 +422,40 @@
 
   const s2 = {
     /* ---------------------------------------------------------------
+       共用工具：等待音訊 duration 就緒
+       第一次播放時 loadedmetadata 可能已在 preload 階段觸發，
+       導致事件監聽器永遠不會被觸發。使用多重機制確保可靠執行。
+       --------------------------------------------------------------- */
+    waitForDuration(audioEl, callback) {
+      // duration 已可用 → 立即執行
+      if (audioEl.duration && isFinite(audioEl.duration)) {
+        callback();
+        return;
+      }
+      // 多重事件 + polling 備用
+      let called = false;
+      const safeRun = () => {
+        if (called) return;
+        if (audioEl.duration && isFinite(audioEl.duration)) {
+          called = true;
+          callback();
+        }
+      };
+      audioEl.addEventListener('loadedmetadata', safeRun, { once: true });
+      audioEl.addEventListener('durationchange', safeRun, { once: true });
+      audioEl.addEventListener('playing', safeRun, { once: true });
+      // polling 備用（每 50ms 檢查，最多 1 秒）
+      const pollId = setInterval(() => {
+        safeRun();
+        if (called) clearInterval(pollId);
+      }, 50);
+      setTimeout(() => {
+        clearInterval(pollId);
+        if (!called) { called = true; callback(); }
+      }, 1000);
+    },
+
+    /* ---------------------------------------------------------------
        共用工具：重置文字行
        --------------------------------------------------------------- */
     resetTextLines(lineIds) {
@@ -529,16 +566,8 @@
             }, line1Dur * 1000);
           };
 
-          if (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) {
-            runWithDuration();
-          } else {
-            sfxVoiceEl.addEventListener('loadedmetadata', runWithDuration, { once: true });
-            setTimeout(() => {
-              if (chatText1 && !chatText1.classList.contains('animate-in')) {
-                chatText1.classList.add('animate-in');
-              }
-            }, 500);
-          }
+          // 等待 duration 就緒後執行（修正第一次播放 loadedmetadata 已觸發的問題）
+          s2.waitForDuration(sfxVoiceEl, runWithDuration);
 
           // 語音結束 → 小膠囊 + Gmail + 問句
           sfxVoiceEl.onended = () => {
@@ -643,16 +672,8 @@
           }, line1Dur * 1000);
         };
 
-        if (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) {
-          runWithDuration();
-        } else {
-          sfxVoiceEl.addEventListener('loadedmetadata', runWithDuration, { once: true });
-          setTimeout(() => {
-            if (chatText1 && !chatText1.classList.contains('animate-in')) {
-              chatText1.classList.add('animate-in');
-            }
-          }, 500);
-        }
+        // 等待 duration 就緒後執行（修正第一次播放 loadedmetadata 已觸發的問題）
+        s2.waitForDuration(sfxVoiceEl, runWithDuration);
 
         // 語音結束 → 小膠囊 + 行事曆 + 問句
         sfxVoiceEl.onended = () => {
