@@ -250,7 +250,8 @@
         const startTextFadeout = () => {
           const dur = transitionAudioEl.duration;
           if (chatText) {
-            if (dur && isFinite(dur)) chatText.style.setProperty('--fadeout-duration', dur + 's');
+            const fadeDur = (dur && isFinite(dur)) ? Math.min(dur, 0.5) : 0.5;
+            chatText.style.setProperty('--fadeout-duration', fadeDur + 's');
             chatText.style.opacity = '1';
             chatText.style.clipPath = 'inset(0 0 0 0)';
             chatText.classList.remove('animate-in');
@@ -687,14 +688,16 @@
        文字消失 → 小膠囊 pop-in → icon 圓底淡入+音效 → 問句語音+光效
        --------------------------------------------------------------- */
     afterGreetingEnded(chatText, textLine, iconCircle, pillsWrap, questionAudioId) {
-      // 文字消失
-      if (chatText) {
-        chatText.style.opacity = '1';
-        chatText.style.clipPath = 'inset(0 0 0 0)';
-        chatText.classList.remove('animate-in');
-        chatText.style.setProperty('--fadeout-duration', '0.3s');
-        chatText.classList.add('animate-out');
-      }
+      // 語音結束後讓文字多停留一會兒再消失
+      setTimeout(() => {
+        if (chatText) {
+          chatText.style.opacity = '1';
+          chatText.style.clipPath = 'inset(0 0 0 0)';
+          chatText.classList.remove('animate-in');
+          chatText.style.setProperty('--fadeout-duration', '0.3s');
+          chatText.classList.add('animate-out');
+        }
+      }, 800);
 
       setTimeout(() => {
         if (textLine) textLine.classList.remove('active');
@@ -722,7 +725,7 @@
             s2.playQuestion(questionAudioId);
           }, 600);
         }, iconDelay);
-      }, 400);
+      }, 1200);
     },
 
     /* ---------------------------------------------------------------

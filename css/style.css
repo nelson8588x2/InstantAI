@@ -202,16 +202,16 @@ html, body {
 /* 左側 AI 星形 icon */
 .ai-icon-wrapper {
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .ai-icon {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   /* 初始狀態：縮小 + 順時針轉 90 度（出場時逆時針轉回） */
   transform: rotate(90deg) scale(0);
   opacity: 0;
@@ -220,7 +220,7 @@ html, body {
 
 /* AI icon 出場動畫：逆時針旋轉 90 度 + 放大至 1 */
 .ai-icon.animate-in {
-  animation: iconSpinIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: iconSpinIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes iconSpinIn {
@@ -244,7 +244,7 @@ html, body {
 .chat-text {
   display: inline-block;
   font-size: 16px;
-  color: #555;
+  color: #868686;
   letter-spacing: 0.3px;
   /* 初始狀態：透過 clip-path 隱藏 */
   opacity: 0;
@@ -275,16 +275,16 @@ html, body {
 /* 右側麥克風 icon */
 .mic-icon-wrapper {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .mic-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   opacity: 0;
   transition: none;
 }
@@ -347,7 +347,8 @@ html, body {
   white-space: nowrap;
   font-size: 16px;
   font-weight: 500;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   /* 初始：隱藏在下方 */
   opacity: 0;
   transform: translateY(40px);
@@ -375,34 +376,39 @@ html, body {
   font-size: 14px;
 }
 
-/* 紅色膠囊 */
+/* 紅色膠囊（Mockup） */
 .mini-pill-red {
-  background-color: #E74C3C;
+  background-color: #dc4438;
 }
 
-/* 黃色膠囊 */
+/* 黃色膠囊（Schedule） */
 .mini-pill-yellow {
-  background-color: #F5A623;
+  background-color: #f5b401;
 }
 
-/* 綠色膠囊 */
+/* 綠色膠囊（Artwork/CMF） */
 .mini-pill-green {
-  background-color: #27AE60;
+  background-color: #109d59;
 }
 
-/* 藍色膠囊 */
+/* 藍色膠囊（Tom） */
 .mini-pill-blue {
-  background-color: #4A90D9;
+  background-color: #4385f5;
 }
 
-/* S2 第三頁深青綠色膠囊 */
+/* S2 第三頁深青綠色膠囊（Rendering） */
 .mini-pill-s2-teal {
-  background-color: #3BA876;
+  background-color: #109d59;
+}
+
+/* S2 第三頁中青綠色膠囊（Final Proposal） */
+.mini-pill-s2-teal-mid {
+  background-color: #34b67a;
 }
 
 /* S2 第三頁淺青綠色膠囊（Checkpoint） */
 .mini-pill-s2-teal-light {
-  background-color: #6CC9A1;
+  background-color: #7bd0a9;
 }
 
 /* 第二頁文字從左到右消失動畫（duration 由 JS 透過 --fadeout-duration 控制） */
@@ -448,14 +454,14 @@ html, body {
 
 /* 第四頁 AI icon（初始正常顯示，會旋轉縮小淡出） */
 .ai-icon-p4 {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   opacity: 0.8;
   transition: none;
 }
 
 .ai-icon-p4.exit {
-  animation: iconSpinOut 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: iconSpinOut 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes iconSpinOut {
@@ -510,9 +516,9 @@ html, body {
   font-weight: 700;
 }
 
-/* 文字中的白色粗體字（Tom、February 8） */
+/* 文字中的深色粗體字（Mockup release） */
 .chat-text .text-white {
-  color: #fff;
+  color: #262626;
   font-weight: 700;
 }
 
@@ -587,8 +593,8 @@ html, body {
   right: var(--pill-padding);
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #e0e0e0;
   display: flex;
@@ -603,8 +609,8 @@ html, body {
 }
 
 .gmail-icon {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
 }
 
 @keyframes gmailFadeIn {
@@ -612,9 +618,9 @@ html, body {
   100% { opacity: 1; }
 }
 
-/* 文字中的橘色粗體字（Time slots） */
+/* 文字中的深色粗體字（Time slots） */
 .chat-text .text-orange {
-  color: #E67E22;
+  color: #262626;
   font-weight: 700;
 }
 
@@ -624,8 +630,8 @@ html, body {
   right: var(--pill-padding);
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #e0e0e0;
   display: flex;
@@ -641,8 +647,8 @@ html, body {
 }
 
 .calendar-icon {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
 }
 
 /* S2 第四頁佈局 */
@@ -670,8 +676,8 @@ html, body {
   right: var(--pill-padding);
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
 }
 
 #s2-pill-page-4 .s2-p4-icon-slot .calendar-circle,
@@ -691,8 +697,8 @@ html, body {
 /* 打勾圓底 */
 .checkmark-circle {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #e0e0e0;
   display: flex;
@@ -707,8 +713,8 @@ html, body {
 }
 
 .checkmark-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 /* S2 第五頁佈局 */
@@ -762,8 +768,8 @@ html, body {
   right: var(--pill-padding);
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
 }
 
 #s2-pill-page-5 .s2-p5-icon-slot .checkmark-circle {
@@ -867,7 +873,7 @@ html, body {
 /* ---- S3 Tracking 文字 ---- */
 .s3-tracking-text {
   font-size: 16px;
-  color: #555;
+  color: #868686;
   white-space: nowrap;
   opacity: 0;
   clip-path: inset(0 100% 0 0);
@@ -899,8 +905,8 @@ html, body {
 
 /* ---- 8 Feb 2026 黃色 pill（初始隱藏） ---- */
 .mini-pill-s3-yellow {
-  background: #E8C84D;
-  color: #fff;
+  background: #f5b401;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .s3-feb-pill {
@@ -919,8 +925,8 @@ html, body {
 
 /* ---- 5 Jan 淺綠色 pill ---- */
 .mini-pill-s3-green-light {
-  background: #6DC9A8;
-  color: #fff;
+  background: #109d59;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .s3-jan-pill {
@@ -997,7 +1003,7 @@ html, body {
   height: 34px;
   max-width: 0;
   border-radius: 17px; /* 固定值 = height/2，左右半圓不變 */
-  background: #4CAF8A;
+  background: #7bd0a9;
   display: flex;
   align-items: center;
   padding: 0;
@@ -1057,18 +1063,18 @@ html, body {
 
 /* ---- 階段 C：Final Proposal 深綠、CMF 藍、Artwork 紅 ---- */
 .mini-pill-s3-green-dark {
-  background: #4CAF8A;
-  color: #fff;
+  background: #f3ba0d;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .mini-pill-s3-blue {
-  background: #5B9BD5;
-  color: #fff;
+  background: #4385f5;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .mini-pill-s3-red {
-  background: #E06050;
-  color: #fff;
+  background: #dc4438;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ---- Group C 依序出現的 pill（初始隱藏） ---- */
