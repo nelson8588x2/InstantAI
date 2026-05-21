@@ -979,14 +979,12 @@
           // 第二次完成後重播第三次
           replayCheckmark(() => {
             // 全部完成 → 鈴聲 + 光效 → 800ms 後問句語音
+            playAudio('s2-sfx-bell');
+            const pg = getPillGlow();
+            if (pg) pg.classList.add('active');
             setTimeout(() => {
-              playAudio('s2-sfx-bell');
-              const pg = getPillGlow();
-              if (pg) pg.classList.add('active');
-              setTimeout(() => {
-                s2.playQuestion('s2-sfx-voice-anything-else');
-              }, 800);
-            }, 300);
+              s2.playQuestion('s2-sfx-voice-anything-else');
+            }, 800);
           });
         });
       }, 1000);
@@ -1433,8 +1431,8 @@
         if (ended) return;
         ended = true;
         stopGlow();
-        // 語音3 結束 → 播放 "Is there anything else?"
-        setTimeout(() => { s3.playAnythingElse(); }, 500);
+        // 語音3 結束 → 等 3000ms 後播放 "Is there anything else?"
+        setTimeout(() => { s3.playAnythingElse(); }, 3000);
       };
 
       if (played && voice3El) {
