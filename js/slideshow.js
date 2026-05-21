@@ -501,11 +501,12 @@
           startGlowWithAudio(sfxVoiceEl);
 
           // 用 timeupdate 驅動文字切換（不依賴 setTimeout + duration）
+          const FALLBACK_DUR = 6.0; // duration 尚未就緒時的預設秒數
           let phase = 0; // 0=等待開始, 1=第一行顯示中, 2=已切換第二行
           const onTimeUpdate = () => {
-            const dur = sfxVoiceEl.duration;
+            const rawDur = sfxVoiceEl.duration;
+            const dur = (rawDur && isFinite(rawDur) && rawDur > 0) ? rawDur : FALLBACK_DUR;
             const cur = sfxVoiceEl.currentTime;
-            if (!dur || !isFinite(dur) || dur <= 0) return;
 
             const line1End = dur * 0.45;
 
@@ -531,7 +532,9 @@
               setTimeout(() => {
                 if (line1) line1.classList.remove('active');
                 if (line2) line2.classList.add('active');
-                const remaining = sfxVoiceEl.duration - sfxVoiceEl.currentTime;
+                const realDur = sfxVoiceEl.duration;
+                const effDur = (realDur && isFinite(realDur) && realDur > 0) ? realDur : FALLBACK_DUR;
+                const remaining = effDur - sfxVoiceEl.currentTime;
                 if (chatText2 && remaining > 0) {
                   chatText2.style.setProperty('--reveal-duration', remaining + 's');
                   chatText2.classList.add('animate-in');
@@ -616,11 +619,12 @@
         startGlowWithAudio(sfxVoiceEl);
 
         // 用 timeupdate 驅動文字切換（不依賴 setTimeout + duration）
+        const FALLBACK_DUR = 6.0;
         let phase = 0;
         const onTimeUpdate = () => {
-          const dur = sfxVoiceEl.duration;
+          const rawDur = sfxVoiceEl.duration;
+          const dur = (rawDur && isFinite(rawDur) && rawDur > 0) ? rawDur : FALLBACK_DUR;
           const cur = sfxVoiceEl.currentTime;
-          if (!dur || !isFinite(dur) || dur <= 0) return;
 
           const line1End = dur * 0.45;
 
@@ -644,7 +648,9 @@
             setTimeout(() => {
               if (line1) line1.classList.remove('active');
               if (line2) line2.classList.add('active');
-              const remaining = sfxVoiceEl.duration - sfxVoiceEl.currentTime;
+              const realDur = sfxVoiceEl.duration;
+              const effDur = (realDur && isFinite(realDur) && realDur > 0) ? realDur : FALLBACK_DUR;
+              const remaining = effDur - sfxVoiceEl.currentTime;
               if (chatText2 && remaining > 0) {
                 chatText2.style.setProperty('--reveal-duration', remaining + 's');
                 chatText2.classList.add('animate-in');
