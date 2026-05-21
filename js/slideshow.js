@@ -432,27 +432,19 @@
         callback();
         return;
       }
-      // 多重事件 + polling 備用
+      // 等待音訊實際開始播放（timeupdate 只在播放中觸發，此時 duration 一定可用）
       let called = false;
       const safeRun = () => {
         if (called) return;
         if (audioEl.duration && isFinite(audioEl.duration)) {
           called = true;
+          audioEl.removeEventListener('timeupdate', safeRun);
           callback();
         }
       };
-      audioEl.addEventListener('loadedmetadata', safeRun, { once: true });
-      audioEl.addEventListener('durationchange', safeRun, { once: true });
-      audioEl.addEventListener('playing', safeRun, { once: true });
-      // polling 備用（每 50ms 檢查，最多 1 秒）
-      const pollId = setInterval(() => {
-        safeRun();
-        if (called) clearInterval(pollId);
-      }, 50);
-      setTimeout(() => {
-        clearInterval(pollId);
-        if (!called) { called = true; callback(); }
-      }, 1000);
+      audioEl.addEventListener('loadedmetadata', safeRun);
+      audioEl.addEventListener('durationchange', safeRun);
+      audioEl.addEventListener('timeupdate', safeRun);
     },
 
     /* ---------------------------------------------------------------
@@ -536,14 +528,19 @@
 
           const runWithDuration = () => {
             const totalDur = sfxVoiceEl.duration;
-            const line1Dur = totalDur * 0.45;
+            if (!totalDur || !isFinite(totalDur)) return;
+
+            const elapsed = sfxVoiceEl.currentTime || 0;
+            const line1End = totalDur * 0.45;
+            const revealDur = Math.max(line1End - elapsed, 0.3);
 
             if (chatText1) {
-              chatText1.style.setProperty('--reveal-duration', line1Dur + 's');
+              chatText1.style.setProperty('--reveal-duration', revealDur + 's');
               chatText1.classList.add('animate-in');
             }
 
             // 第一行結束 → 消失 → 第二行
+            const delayToFadeout = Math.max((line1End - elapsed) * 1000, 300);
             setTimeout(() => {
               if (chatText1) {
                 chatText1.style.opacity = '1';
@@ -563,7 +560,7 @@
                   chatText2.classList.add('animate-in');
                 }
               }, 350);
-            }, line1Dur * 1000);
+            }, delayToFadeout);
           };
 
           // 等待 duration 就緒後執行（修正第一次播放 loadedmetadata 已觸發的問題）
@@ -642,14 +639,19 @@
 
         const runWithDuration = () => {
           const totalDur = sfxVoiceEl.duration;
-          const line1Dur = totalDur * 0.45;
+          if (!totalDur || !isFinite(totalDur)) return;
+
+          const elapsed = sfxVoiceEl.currentTime || 0;
+          const line1End = totalDur * 0.45;
+          const revealDur = Math.max(line1End - elapsed, 0.3);
 
           if (chatText1) {
-            chatText1.style.setProperty('--reveal-duration', line1Dur + 's');
+            chatText1.style.setProperty('--reveal-duration', revealDur + 's');
             chatText1.classList.add('animate-in');
           }
 
           // 第一行結束 → 消失 → 第二行
+          const delayToFadeout = Math.max((line1End - elapsed) * 1000, 300);
           setTimeout(() => {
             if (chatText1) {
               chatText1.style.opacity = '1';
@@ -669,7 +671,7 @@
                 chatText2.classList.add('animate-in');
               }
             }, 350);
-          }, line1Dur * 1000);
+          }, delayToFadeout);
         };
 
         // 等待 duration 就緒後執行（修正第一次播放 loadedmetadata 已觸發的問題）
