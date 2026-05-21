@@ -45,6 +45,17 @@
     const audio = document.getElementById(id);
     if (audio && audio.querySelector('source')) {
       audio.currentTime = 0;
+      // 如果有 VOLUME_MAP 設定且尚未連接 Web Audio，先建立連接
+      if (VOLUME_MAP[id] && !audio._sourceNode && audioContext) {
+        audio._sourceNode = audioContext.createMediaElementSource(audio);
+        const gain = getGainNode(audio);
+        if (gain) {
+          audio._sourceNode.connect(gain);
+          gain.connect(audioContext.destination);
+        } else {
+          audio._sourceNode.connect(audioContext.destination);
+        }
+      }
       audio.play().catch(() => {});
       return audio;
     }
@@ -68,6 +79,43 @@
 
   let audioContext = null;
   let analyser = null;
+  let glowAudioEl = null; // 當前連接光效的 audio element
+
+  /* 音量標準化表（基於 RMS 分析，目標 RMS ≈ 3800，增益上限 1.2） */
+  const VOLUME_MAP = {
+    's1-sfx-voice-greeting':       1.08,  // RMS 3518
+    's1-sfx-voice-transition-p2p3': 1.13, // RMS 3373
+    's1-sfx-voice-page3-first':    1.11,  // RMS 3429
+    's1-sfx-voice-page3-second':   0.78,  // RMS 4887
+    's1-sfx-voice-page3-third':    0.91,  // RMS 4179
+    's1-sfx-voice-page3-closing':  0.65,  // RMS 5879
+    's1-sfx-voice-page4':          0.88,  // RMS 4326
+    's2-sfx-voice-greeting':       1.20,  // RMS 2549（偏小，拉高）
+    's2-sfx-voice-details-q':      0.88,  // RMS 4294
+    's2-sfx-voice-page3':          0.93,  // RMS 4080
+    's2-sfx-voice-calendar-q':     1.20,  // RMS 2886（偏小，拉高）
+    's2-sfx-voice-page4':          1.05,  // RMS 3614
+    's2-sfx-voice-anything-else':  0.61,  // RMS 6276（最大聲）
+    's2-sfx-voice-page5':          1.12,  // RMS 3402
+    's3-sfx-voice-part1':          1.09,  // RMS 3489
+    's3-sfx-voice-part2':          1.20,  // RMS 3128
+    's3-sfx-voice-part3':          1.14,  // RMS 3333
+    's3-sfx-voice-anything-else':  1.13,  // RMS 3373
+    's3-sfx-voice-part4':          1.05,  // RMS 3625
+  };
+
+  /**
+   * 取得音訊的標準化增益節點（每個 source 專屬，只建立一次）
+   */
+  function getGainNode(audioEl) {
+    if (!audioContext) return null;
+    if (!audioEl._gainNode) {
+      audioEl._gainNode = audioContext.createGain();
+      const vol = VOLUME_MAP[audioEl.id] || 0.85;
+      audioEl._gainNode.gain.value = vol;
+    }
+    return audioEl._gainNode;
+  }
 
   /**
    * 將 audio 元素連接到 Web Audio API，用 analyser 取得音量
@@ -84,18 +132,38 @@
       audioContext.resume().catch(() => {});
     }
 
+    // 先清理舊的 analyser
+    if (analyser) {
+      analyser.disconnect();
+      analyser = null;
+    }
+
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 256;
 
     if (!audioEl._sourceNode) {
       audioEl._sourceNode = audioContext.createMediaElementSource(audioEl);
     }
-    audioEl._sourceNode.connect(analyser);
+
+    // 斷開舊的所有連線再重新接
+    try { audioEl._sourceNode.disconnect(); } catch (e) {}
+    const gain = getGainNode(audioEl);
+    if (gain) {
+      try { gain.disconnect(); } catch (e) {}
+      // source → gain → analyser → destination
+      audioEl._sourceNode.connect(gain);
+      gain.connect(analyser);
+    } else {
+      audioEl._sourceNode.connect(analyser);
+    }
     analyser.connect(audioContext.destination);
+
+    glowAudioEl = audioEl;
 
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
     function updateGlow() {
+      if (!analyser) return;
       analyser.getByteFrequencyData(dataArray);
       let sum = 0;
       for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
@@ -109,7 +177,7 @@
   }
 
   /**
-   * 停止光效
+   * 停止光效（保持 source → destination 連接，避免音訊靜音）
    */
   function stopGlow() {
     if (glowAnimFrameId) {
@@ -120,6 +188,20 @@
       analyser.disconnect();
       analyser = null;
     }
+    // 恢復 source → gain → destination 連接，讓音訊繼續播放
+    if (glowAudioEl && glowAudioEl._sourceNode && audioContext) {
+      try {
+        glowAudioEl._sourceNode.disconnect();
+        const gain = getGainNode(glowAudioEl);
+        if (gain) {
+          glowAudioEl._sourceNode.connect(gain);
+          gain.connect(audioContext.destination);
+        } else {
+          glowAudioEl._sourceNode.connect(audioContext.destination);
+        }
+      } catch (e) { /* 忽略已斷開的錯誤 */ }
+    }
+    glowAudioEl = null;
     const pillGlow = getPillGlow();
     if (pillGlow) {
       pillGlow.classList.remove('active');
