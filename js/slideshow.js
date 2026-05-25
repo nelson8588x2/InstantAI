@@ -240,6 +240,62 @@
     }
   }
 
+  /* ============================
+     提詞機 + 下一頁按鈕光暈
+     ============================ */
+  const prompterEl = document.getElementById('prompter');
+  const btnNextEl = document.getElementById('btn-next');
+
+  // 各 Script / 各頁動畫完成後要顯示的提詞（null = 不顯示）
+  const PROMPTER_MAP = {
+    '1': {
+      0: 'Hey Gemini!',
+      1: 'Please do my morning brief.',
+      2: 'No, that\'s all for now, thanks.',
+    },
+    '2': {
+      0: null,
+      1: 'Sure.',
+      2: 'Yes, please.',
+      3: 'No, Thank you.',
+    },
+    '3': {
+      0: 'Hey Gemini, Tell me about my mockup plan.',
+      1: 'That\'s all. Thanks Gemini.',
+    },
+  };
+
+  /**
+   * 顯示提詞 + 啟動下一頁按鈕呼吸燈
+   */
+  function showPrompter(text) {
+    if (!prompterEl || !text) return;
+    prompterEl.textContent = text;
+    prompterEl.classList.add('visible');
+    if (btnNextEl) btnNextEl.classList.add('glow-hint');
+  }
+
+  /**
+   * 隱藏提詞 + 停止下一頁按鈕呼吸燈
+   */
+  function hidePrompter() {
+    if (prompterEl) {
+      prompterEl.classList.remove('visible');
+      prompterEl.textContent = '';
+    }
+    if (btnNextEl) btnNextEl.classList.remove('glow-hint');
+  }
+
+  /**
+   * 根據當前 Script + 頁面索引，嘗試顯示提詞（若有配置）
+   */
+  function tryShowPrompter() {
+    const map = PROMPTER_MAP[currentScript];
+    if (!map) return;
+    const text = map[currentIndex];
+    if (text) showPrompter(text);
+  }
+
   /* ================================================================
      Script 1 動畫
      ================================================================ */
@@ -294,13 +350,13 @@
             chatText.classList.add('animate-in');
           }
           startGlowWithAudio(sfxVoiceEl);
-          sfxVoiceEl.onended = () => { stopGlow(); isAnimating = false; };
+          sfxVoiceEl.onended = () => { stopGlow(); isAnimating = false; tryShowPrompter(); };
           sfxVoiceEl.onpause = () => { stopGlow(); isAnimating = false; };
         } else {
           if (chatText) chatText.classList.add('animate-in');
           const pg = getPillGlow();
           if (pg) pg.classList.add('active');
-          setAnimTimeout(() => { stopGlow(); isAnimating = false; }, 2000);
+          setAnimTimeout(() => { stopGlow(); isAnimating = false; tryShowPrompter(); }, 2000);
         }
       }, 600);
     },
@@ -408,10 +464,10 @@
           const closingPlayed = playAudio('s1-sfx-voice-page3-closing');
           if (closingPlayed) {
             startGlowWithAudio(closingEl);
-            closingEl.onended = () => { stopGlow(); isAnimating = false; };
+            closingEl.onended = () => { stopGlow(); isAnimating = false; tryShowPrompter(); };
             closingEl.onpause = () => { stopGlow(); isAnimating = false; };
-          } else { stopGlow(); isAnimating = false; }
-        } else { stopGlow(); isAnimating = false; }
+          } else { stopGlow(); isAnimating = false; tryShowPrompter(); }
+        } else { stopGlow(); isAnimating = false; tryShowPrompter(); }
         return;
       }
       const pill = pills[index];
@@ -857,6 +913,7 @@
         qEl.onended = () => {
           stopGlow();
           isAnimating = false;
+          tryShowPrompter();
         };
         qEl.onpause = () => { stopGlow(); };
       } else {
@@ -866,6 +923,7 @@
         setAnimTimeout(() => {
           stopGlow();
           isAnimating = false;
+          tryShowPrompter();
         }, 2000);
       }
     },
@@ -1508,10 +1566,10 @@
 
         if (played && voiceEl) {
           startGlowWithAudio(voiceEl);
-          voiceEl.onended = () => { stopGlow(); isAnimating = false; };
+          voiceEl.onended = () => { stopGlow(); isAnimating = false; tryShowPrompter(); };
           voiceEl.onpause = () => { stopGlow(); };
         } else {
-          setAnimTimeout(() => { stopGlow(); isAnimating = false; }, 2000);
+          setAnimTimeout(() => { stopGlow(); isAnimating = false; tryShowPrompter(); }, 2000);
         }
       }, 800);
 
@@ -1705,6 +1763,9 @@
      ============================ */
 
   function showSlide(index) {
+    // 0. 隱藏提詞 + 停止下一頁按鈕光暈
+    hidePrompter();
+
     // 1. 強制清除所有排程中的動畫（解決計時器殘留問題）
     clearAllAnimTimeouts();
 
@@ -1747,7 +1808,18 @@
     // 觸發進入頁面的動畫
     if (config) {
       const animFn = config.animations && config.animations[currentIndex];
-      if (animFn) setAnimTimeout(animFn, 100);
+      if (animFn) {
+        setAnimTimeout(animFn, 100);
+      } else {
+        // 無動畫的頁面（如首頁）：直接顯示提詞或光暈
+        const map = PROMPTER_MAP[currentScript];
+        if (map && map[currentIndex]) {
+          showPrompter(map[currentIndex]);
+        } else if (map && map[currentIndex] === null) {
+          // 無提詞但需要光暈提示（如 S2 page1）
+          if (btnNextEl) btnNextEl.classList.add('glow-hint');
+        }
+      }
     }
   }
 
@@ -1819,6 +1891,15 @@
     pageIndicator.textContent = `1 / ${slides.length}`;
 
     isAnimating = false;
+
+    // 提詞機：顯示新 Script 第一頁的提詞（若有）
+    hidePrompter();
+    const map = PROMPTER_MAP[currentScript];
+    if (map && map[0]) {
+      showPrompter(map[0]);
+    } else if (map && map[0] === null) {
+      if (btnNextEl) btnNextEl.classList.add('glow-hint');
+    }
   }
 
   /* ============================

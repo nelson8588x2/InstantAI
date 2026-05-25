@@ -1212,6 +1212,54 @@ html, body {
 }
 
 /* ========================================
+   提詞機
+   ======================================== */
+.prompter {
+  position: fixed;
+  top: calc(50% + var(--pill-height) / 2 + 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  font-weight: 500;
+  color: #000;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.prompter.visible {
+  opacity: 1;
+}
+
+/* 下一頁按鈕呼吸燈光暈 */
+.control-btn-next {
+  position: relative;
+}
+
+.control-btn-next::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.5) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.control-btn-next.glow-hint::before {
+  opacity: 1;
+  animation: btnGlowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes btnGlowPulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+/* ========================================
    Script 4：即時語音對話
    ======================================== */
 
