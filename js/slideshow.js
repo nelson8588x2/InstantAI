@@ -670,14 +670,14 @@
           startGlowWithAudio(sfxVoiceEl);
           let intentionalPause = false; // 防止中間暫停觸發 stopGlow
 
-          // 用 timeupdate 驅動文字切換（不依賴 setTimeout + duration）
-          const FALLBACK_DUR = 6.0; // duration 尚未就緒時的預設秒數
-          let phase = 0; // 0=等待開始, 1=第一行顯示中, 2=已切換第二行
+          // 用 timeupdate 驅動文字切換 — duration 未就緒時跳過，不使用 fallback
+          let phase = 0; // 0=等待 duration, 1=第一行顯示中, 2=已切換第二行
           const onTimeUpdate = () => {
             const rawDur = sfxVoiceEl.duration;
-            const dur = (rawDur && isFinite(rawDur) && rawDur > 0) ? rawDur : FALLBACK_DUR;
+            // duration 尚未就緒 → 跳過本次，等下次 timeupdate
+            if (!rawDur || !isFinite(rawDur) || rawDur <= 0) return;
+            const dur = rawDur;
             const cur = sfxVoiceEl.currentTime;
-
             const line1End = dur * 0.45;
 
             if (phase === 0) {
@@ -695,7 +695,7 @@
               intentionalPause = true;
               sfxVoiceEl.pause();
 
-              // 停頓 600ms 後：第一行消失，恢復語音，第二行出現
+              // 停頓 200ms 後：第一行消失，恢復語音，第二行出現
               setAnimTimeout(() => {
                 if (chatText1) {
                   chatText1.style.opacity = '1';
@@ -710,9 +710,7 @@
                   intentionalPause = false;
                   sfxVoiceEl.play().catch(() => {});
                   startGlowWithAudio(sfxVoiceEl);
-                  const realDur = sfxVoiceEl.duration;
-                  const effDur = (realDur && isFinite(realDur) && realDur > 0) ? realDur : FALLBACK_DUR;
-                  const remaining = effDur - sfxVoiceEl.currentTime;
+                  const remaining = dur - sfxVoiceEl.currentTime;
                   if (chatText2 && remaining > 0) {
                     chatText2.style.setProperty('--reveal-duration', remaining + 's');
                     chatText2.classList.add('animate-in');
@@ -720,7 +718,7 @@
                     chatText2.classList.add('animate-in');
                   }
                 }, 350);
-              }, 600);
+              }, 200);
             }
           };
           sfxVoiceEl.addEventListener('timeupdate', onTimeUpdate);
@@ -804,14 +802,14 @@
         startGlowWithAudio(sfxVoiceEl);
         let intentionalPause = false; // 防止中間暫停觸發 stopGlow
 
-        // 用 timeupdate 驅動文字切換（不依賴 setTimeout + duration）
-        const FALLBACK_DUR = 6.0;
+        // 用 timeupdate 驅動文字切換 — duration 未就緒時跳過，不使用 fallback
         let phase = 0;
         const onTimeUpdate = () => {
           const rawDur = sfxVoiceEl.duration;
-          const dur = (rawDur && isFinite(rawDur) && rawDur > 0) ? rawDur : FALLBACK_DUR;
+          // duration 尚未就緒 → 跳過本次，等下次 timeupdate
+          if (!rawDur || !isFinite(rawDur) || rawDur <= 0) return;
+          const dur = rawDur;
           const cur = sfxVoiceEl.currentTime;
-
           const line1End = dur * 0.45;
 
           if (phase === 0) {
@@ -828,7 +826,7 @@
             intentionalPause = true;
             sfxVoiceEl.pause();
 
-            // 停頓 600ms 後：第一行消失，恢復語音，第二行出現
+            // 停頓 200ms 後：第一行消失，恢復語音，第二行出現
             setAnimTimeout(() => {
               if (chatText1) {
                 chatText1.style.opacity = '1';
@@ -843,9 +841,7 @@
                 intentionalPause = false;
                 sfxVoiceEl.play().catch(() => {});
                 startGlowWithAudio(sfxVoiceEl);
-                const realDur = sfxVoiceEl.duration;
-                const effDur = (realDur && isFinite(realDur) && realDur > 0) ? realDur : FALLBACK_DUR;
-                const remaining = effDur - sfxVoiceEl.currentTime;
+                const remaining = dur - sfxVoiceEl.currentTime;
                 if (chatText2 && remaining > 0) {
                   chatText2.style.setProperty('--reveal-duration', remaining + 's');
                   chatText2.classList.add('animate-in');
@@ -853,7 +849,7 @@
                   chatText2.classList.add('animate-in');
                 }
               }, 350);
-            }, 600);
+            }, 200);
           }
         };
         sfxVoiceEl.addEventListener('timeupdate', onTimeUpdate);
