@@ -1342,6 +1342,114 @@ html, body {
    Script 4：即時語音對話
    ======================================== */
 
+/* --- S4 Aurora 光效容器：佔滿膠囊內部，裁切圓角 --- */
+.s4-aurora {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--pill-radius);
+  overflow: hidden;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  background: #1a1028;
+}
+
+/* 進入 S4 時顯示 aurora */
+.s4-aurora.active {
+  opacity: 1;
+}
+
+/* --- Aurora 浮動光團 --- */
+.s4-aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(28px);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  /* 預設：scale(1)，JS 會透過 CSS 變數 --blob-scale 動態調整 */
+  --blob-scale: 1;
+}
+
+/* 光團 1：左上，偏紫 */
+.s4-blob-1 {
+  width: 180px;
+  height: 110px;
+  left: 5%;
+  top: -20%;
+  background: radial-gradient(ellipse at center, rgba(120, 60, 220, 0.9), transparent 70%);
+  animation: s4drift1 6s ease-in-out infinite alternate;
+}
+
+/* 光團 2：中央偏右，偏藍 */
+.s4-blob-2 {
+  width: 200px;
+  height: 120px;
+  right: 10%;
+  bottom: -15%;
+  background: radial-gradient(ellipse at center, rgba(60, 120, 255, 0.85), transparent 70%);
+  animation: s4drift2 7s ease-in-out infinite alternate;
+}
+
+/* 光團 3：中央，偏青白（呼吸光） */
+.s4-blob-3 {
+  width: 160px;
+  height: 100px;
+  left: 35%;
+  top: -10%;
+  background: radial-gradient(ellipse at center, rgba(140, 180, 255, 0.8), transparent 70%);
+  animation: s4drift3 5s ease-in-out infinite alternate;
+}
+
+/* --- 聆聽模式：偏白色調 --- */
+.s4-aurora.listening .s4-blob-1 {
+  background: radial-gradient(ellipse at center, rgba(200, 200, 240, 0.9), transparent 70%);
+}
+.s4-aurora.listening .s4-blob-2 {
+  background: radial-gradient(ellipse at center, rgba(180, 210, 255, 0.85), transparent 70%);
+}
+.s4-aurora.listening .s4-blob-3 {
+  background: radial-gradient(ellipse at center, rgba(230, 230, 255, 0.9), transparent 70%);
+}
+.s4-aurora.listening {
+  background: #2a2a3a;
+}
+
+/* --- 回答模式：偏紫藍色調（附圖配色） --- */
+.s4-aurora.speaking .s4-blob-1 {
+  background: radial-gradient(ellipse at center, rgba(90, 30, 180, 0.95), transparent 70%);
+}
+.s4-aurora.speaking .s4-blob-2 {
+  background: radial-gradient(ellipse at center, rgba(40, 100, 240, 0.9), transparent 70%);
+}
+.s4-aurora.speaking .s4-blob-3 {
+  background: radial-gradient(ellipse at center, rgba(100, 160, 255, 0.85), transparent 70%);
+}
+.s4-aurora.speaking {
+  background: #0e0824;
+}
+
+/* --- 漂浮動畫 --- */
+@keyframes s4drift1 {
+  0%   { transform: translate(0, 0)     scale(var(--blob-scale, 1)); }
+  100% { transform: translate(60px, 8px) scale(var(--blob-scale, 1)); }
+}
+@keyframes s4drift2 {
+  0%   { transform: translate(0, 0)      scale(var(--blob-scale, 1)); }
+  100% { transform: translate(-50px, -6px) scale(var(--blob-scale, 1)); }
+}
+@keyframes s4drift3 {
+  0%   { transform: translate(0, 0)     scale(var(--blob-scale, 1)); }
+  100% { transform: translate(30px, 5px) scale(var(--blob-scale, 1)); }
+}
+
+/* --- Compal Logo 在 aurora 上層 --- */
+.s4-logo {
+  position: relative;
+  z-index: 2;
+  filter: brightness(2.5);
+  opacity: 0.95;
+}
+
 .s4-status {
   position: fixed;
   left: 50%;

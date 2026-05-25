@@ -38,6 +38,13 @@
   // 光暈控制回調（由外部設定）
   let onAiSpeakingStart = null;
   let onAiSpeakingEnd = null;
+  // 音量回調：fn(volume: 0~1, source: 'mic'|'ai')
+  let onVolumeUpdate = null;
+
+  // 音量分析節點
+  let micAnalyser = null;
+  let aiAnalyser = null;
+  let volumeRafId = null;
 
   /* ============================
      DOM 元素
@@ -195,6 +202,13 @@
       playbackContext.resume();
     }
 
+    // AI 播放音量分析節點（懶初始化）
+    if (!aiAnalyser && playbackContext) {
+      aiAnalyser = playbackContext.createAnalyser();
+      aiAnalyser.fftSize = 256;
+      aiAnalyser.connect(playbackContext.destination);
+    }
+
     while (audioQueue.length > 0) {
       const pcmB64 = audioQueue.shift();
       const pcmBytes = base64ToArrayBuffer(pcmB64);
@@ -209,7 +223,12 @@
 
       const source = playbackContext.createBufferSource();
       source.buffer = buffer;
-      source.connect(playbackContext.destination);
+      // 透過 aiAnalyser 節點連接到輸出（既播放又可分析音量）
+      if (aiAnalyser) {
+        source.connect(aiAnalyser);
+      } else {
+        source.connect(playbackContext.destination);
+      }
 
       // 精確排程：每個 buffer 接在前一個結束時開始，無間隙
       const now = playbackContext.currentTime;
@@ -238,6 +257,47 @@
     isPlaying = false;
     playbackScheduledTime = 0;
     if (onAiSpeakingEnd) onAiSpeakingEnd();
+  }
+
+  /* ============================
+     音量分析迴圈（requestAnimationFrame）
+     偵測麥克風 / AI 播放的即時音量
+     ============================ */
+  function startVolumeLoop() {
+    if (volumeRafId) return; // 已在跑
+    const micData = new Uint8Array(micAnalyser ? micAnalyser.frequencyBinCount : 128);
+    const aiData  = new Uint8Array(128);
+
+    function loop() {
+      volumeRafId = requestAnimationFrame(loop);
+      if (!onVolumeUpdate) return;
+
+      // 麥克風音量
+      if (micAnalyser && isRecording) {
+        micAnalyser.getByteFrequencyData(micData);
+        let sum = 0;
+        for (let i = 0; i < micData.length; i++) sum += micData[i];
+        const micVol = Math.min(sum / micData.length / 128, 1);
+        onVolumeUpdate(micVol, 'mic');
+      }
+
+      // AI 播放音量
+      if (aiAnalyser && isPlaying) {
+        aiAnalyser.getByteFrequencyData(aiData);
+        let sum = 0;
+        for (let i = 0; i < aiData.length; i++) sum += aiData[i];
+        const aiVol = Math.min(sum / aiData.length / 128, 1);
+        onVolumeUpdate(aiVol, 'ai');
+      }
+    }
+    loop();
+  }
+
+  function stopVolumeLoop() {
+    if (volumeRafId) {
+      cancelAnimationFrame(volumeRafId);
+      volumeRafId = null;
+    }
   }
 
   /* ============================
@@ -289,6 +349,12 @@
 
     source.connect(workletNode);
     workletNode.connect(audioContext.destination);
+
+    // 麥克風音量分析（不影響錄音路徑，僅供視覺化）
+    micAnalyser = audioContext.createAnalyser();
+    micAnalyser.fftSize = 256;
+    source.connect(micAnalyser);
+    startVolumeLoop();
 
     isRecording = true;
 
@@ -346,8 +412,11 @@
      ============================ */
   function cleanup() {
     stopStreaming();
+    stopVolumeLoop();
     audioQueue = [];
     stopPlayback();
+    micAnalyser = null;
+    aiAnalyser = null;
     if (ws) {
       ws.close();
       ws = null;
@@ -389,8 +458,10 @@
     cleanup,
     get isConnected() { return isConnected; },
     get isRecording() { return isRecording; },
+    get isPlaying() { return isPlaying; },
     set onAiSpeakingStart(fn) { onAiSpeakingStart = fn; },
-    set onAiSpeakingEnd(fn) { onAiSpeakingEnd = fn; }
+    set onAiSpeakingEnd(fn) { onAiSpeakingEnd = fn; },
+    set onVolumeUpdate(fn) { onVolumeUpdate = fn; }
   };
 
 })();

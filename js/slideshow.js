@@ -1733,16 +1733,64 @@
     resets: {},
   };
 
-  // 光暈連接：AI 說話時啟動膠囊光暈
+  /* --- S4 Aurora 光效控制 --- */
+  const s4Aurora = {
+    el: null,
+    blobs: [],
+
+    /** 啟動 aurora（進入 S4 時） */
+    start() {
+      this.el = document.getElementById('s4-aurora');
+      if (!this.el) return;
+      this.blobs = this.el.querySelectorAll('.s4-aurora-blob');
+      this.el.classList.add('active', 'listening'); // 預設聆聽模式
+    },
+
+    /** 停止 aurora（離開 S4 時） */
+    stop() {
+      if (!this.el) return;
+      this.el.classList.remove('active', 'listening', 'speaking');
+      this.blobs.forEach(b => b.style.removeProperty('--blob-scale'));
+      this.el = null;
+    },
+
+    /** 切換為 AI 回答模式（紫藍色調） */
+    setSpeaking() {
+      if (!this.el) return;
+      this.el.classList.remove('listening');
+      this.el.classList.add('speaking');
+    },
+
+    /** 切換為聆聽模式（偏白色調） */
+    setListening() {
+      if (!this.el) return;
+      this.el.classList.remove('speaking');
+      this.el.classList.add('listening');
+    },
+
+    /** 根據音量更新 blob 大小（volume: 0~1） */
+    updateVolume(volume) {
+      if (!this.blobs.length) return;
+      // 將 0~1 映射為 scale 0.8~1.6，讓光團跟著音量呼吸
+      const scale = 0.8 + volume * 0.8;
+      this.blobs.forEach(b => b.style.setProperty('--blob-scale', scale.toFixed(2)));
+    },
+  };
+
+  // Gemini Live 回調：AI 說話 / 結束 + 音量
   if (window.geminiLive) {
     window.geminiLive.onAiSpeakingStart = () => {
       if (currentScript !== '4') return;
+      // 膠囊外框光暈
       const pillGlow = getPillGlow();
       if (pillGlow) {
         pillGlow.classList.add('active');
         pillGlow.style.opacity = '0.8';
       }
+      // Aurora 切換為回答模式
+      s4Aurora.setSpeaking();
     };
+
     window.geminiLive.onAiSpeakingEnd = () => {
       if (currentScript !== '4') return;
       const pillGlow = getPillGlow();
@@ -1750,6 +1798,14 @@
         pillGlow.classList.remove('active');
         pillGlow.style.opacity = '';
       }
+      // Aurora 切換為聆聽模式
+      s4Aurora.setListening();
+    };
+
+    // 音量回調：驅動 aurora 光團大小
+    window.geminiLive.onVolumeUpdate = (volume, source) => {
+      if (currentScript !== '4') return;
+      s4Aurora.updateVolume(volume);
     };
   }
 
@@ -1922,12 +1978,14 @@
       stopS0Carousel();
     }
 
-    // S4：進入時自動連線，離開時自動斷線
-    if (scriptNum === '4' && window.geminiLive) {
-      window.geminiLive.connect();
+    // S4：進入時自動連線 + 啟動 aurora，離開時斷線 + 停止 aurora
+    if (scriptNum === '4') {
+      s4Aurora.start();
+      if (window.geminiLive) window.geminiLive.connect();
     }
-    if (scriptNum !== '4' && window.geminiLive) {
-      window.geminiLive.cleanup();
+    if (scriptNum !== '4') {
+      s4Aurora.stop();
+      if (window.geminiLive) window.geminiLive.cleanup();
     }
 
     // 更新按鈕狀態
