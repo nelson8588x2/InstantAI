@@ -24,6 +24,20 @@ html, body {
 /* ========================================
    Script 選擇器
    ======================================== */
+/* Script 名稱標示（大膠囊正上方） */
+.script-label {
+  position: fixed;
+  top: calc(50% - var(--pill-height) / 2 - 80px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 60px;
+  font-weight: 700;
+  color: #000;
+  z-index: 100;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 .script-selector {
   position: fixed;
   top: 16px;
@@ -1069,6 +1083,7 @@ html, body {
   color: #fff;
   opacity: 0;
   flex-shrink: 0;
+  transition: opacity 0.8s ease-in;
 }
 
 .s3-number-18.show {
@@ -1321,12 +1336,13 @@ html, body {
 .control-btn-next::before {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -10px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.5) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.6) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
+  z-index: -1;
 }
 
 .control-btn-next.glow-hint::before {
@@ -1376,9 +1392,9 @@ html, body {
 /* 光團 1：左側，偏紫（寬度 ≈ 2/3 膠囊） */
 .s4-blob-1 {
   width: calc(var(--pill-width) * 0.67);
-  height: 140%;
-  left: -10%;
-  top: -30%;
+  height: 160%;
+  left: -15%;
+  top: -40%;
   background: radial-gradient(ellipse at center, rgba(120, 60, 220, 0.9), transparent 70%);
   animation: s4drift1 6s ease-in-out infinite alternate;
 }
@@ -1386,9 +1402,9 @@ html, body {
 /* 光團 2：右側，偏藍（寬度 ≈ 2/3 膠囊） */
 .s4-blob-2 {
   width: calc(var(--pill-width) * 0.67);
-  height: 140%;
-  right: -5%;
-  bottom: -30%;
+  height: 160%;
+  right: -15%;
+  bottom: -40%;
   background: radial-gradient(ellipse at center, rgba(60, 120, 255, 0.85), transparent 70%);
   animation: s4drift2 7s ease-in-out infinite alternate;
 }
@@ -1396,9 +1412,9 @@ html, body {
 /* 光團 3：中央，偏青白（寬度 ≈ 2/3 膠囊） */
 .s4-blob-3 {
   width: calc(var(--pill-width) * 0.67);
-  height: 140%;
-  left: 20%;
-  top: -25%;
+  height: 160%;
+  left: 15%;
+  top: -35%;
   background: radial-gradient(ellipse at center, rgba(140, 180, 255, 0.8), transparent 70%);
   animation: s4drift3 5s ease-in-out infinite alternate;
 }

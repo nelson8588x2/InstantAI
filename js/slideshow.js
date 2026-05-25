@@ -462,14 +462,21 @@
     playPillSequence(pills, index) {
       if (index >= pills.length) {
         const closingEl = document.getElementById('s1-sfx-voice-page3-closing');
+        // closing 語音播完後等 3000ms → 自動進入 page 4（鈴聲 + 問句）
+        const afterClosing = () => {
+          stopGlow();
+          setAnimTimeout(() => {
+            showSlide(3); // 自動切到 slide 4，觸發 animateSlide4
+          }, 3000);
+        };
         if (closingEl) {
           const closingPlayed = playAudio('s1-sfx-voice-page3-closing');
           if (closingPlayed) {
             startGlowWithAudio(closingEl);
-            closingEl.onended = () => { stopGlow(); isAnimating = false; tryShowPrompter(); };
+            closingEl.onended = () => { afterClosing(); };
             closingEl.onpause = () => { stopGlow(); isAnimating = false; };
-          } else { stopGlow(); isAnimating = false; tryShowPrompter(); }
-        } else { stopGlow(); isAnimating = false; tryShowPrompter(); }
+          } else { afterClosing(); }
+        } else { afterClosing(); }
         return;
       }
       const pill = pills[index];
@@ -1987,6 +1994,10 @@
       s4Aurora.stop();
       if (window.geminiLive) window.geminiLive.cleanup();
     }
+
+    // 更新 Script 名稱標示
+    const scriptLabel = document.getElementById('script-label');
+    if (scriptLabel) scriptLabel.textContent = `Script ${scriptNum}`;
 
     // 更新按鈕狀態
     document.querySelectorAll('.script-btn').forEach(btn => {
