@@ -371,10 +371,11 @@ html, body {
   }
 }
 
-/* 小膠囊 icon */
+/* 小膠囊 icon（emoji 不受父層半透明文字色影響） */
 .mini-pill-icon {
   font-size: 14px;
   opacity: 1;
+  color: #fff;
 }
 
 /* 紅色膠囊（Mockup） */
@@ -1366,36 +1367,38 @@ html, body {
   filter: blur(28px);
   mix-blend-mode: screen;
   will-change: transform, opacity;
+  /* 色調切換時平滑過渡 */
+  transition: background 0.8s ease;
   /* 預設：scale(1)，JS 會透過 CSS 變數 --blob-scale 動態調整 */
   --blob-scale: 1;
 }
 
-/* 光團 1：左上，偏紫 */
+/* 光團 1：左側，偏紫（寬度 ≈ 2/3 膠囊） */
 .s4-blob-1 {
-  width: 180px;
-  height: 110px;
-  left: 5%;
-  top: -20%;
+  width: calc(var(--pill-width) * 0.67);
+  height: 140%;
+  left: -10%;
+  top: -30%;
   background: radial-gradient(ellipse at center, rgba(120, 60, 220, 0.9), transparent 70%);
   animation: s4drift1 6s ease-in-out infinite alternate;
 }
 
-/* 光團 2：中央偏右，偏藍 */
+/* 光團 2：右側，偏藍（寬度 ≈ 2/3 膠囊） */
 .s4-blob-2 {
-  width: 200px;
-  height: 120px;
-  right: 10%;
-  bottom: -15%;
+  width: calc(var(--pill-width) * 0.67);
+  height: 140%;
+  right: -5%;
+  bottom: -30%;
   background: radial-gradient(ellipse at center, rgba(60, 120, 255, 0.85), transparent 70%);
   animation: s4drift2 7s ease-in-out infinite alternate;
 }
 
-/* 光團 3：中央，偏青白（呼吸光） */
+/* 光團 3：中央，偏青白（寬度 ≈ 2/3 膠囊） */
 .s4-blob-3 {
-  width: 160px;
-  height: 100px;
-  left: 35%;
-  top: -10%;
+  width: calc(var(--pill-width) * 0.67);
+  height: 140%;
+  left: 20%;
+  top: -25%;
   background: radial-gradient(ellipse at center, rgba(140, 180, 255, 0.8), transparent 70%);
   animation: s4drift3 5s ease-in-out infinite alternate;
 }
@@ -1412,6 +1415,7 @@ html, body {
 }
 .s4-aurora.listening {
   background: #2a2a3a;
+  transition: background 0.8s ease, opacity 0.6s ease;
 }
 
 /* --- 回答模式：偏紫藍色調（附圖配色） --- */
@@ -1426,6 +1430,7 @@ html, body {
 }
 .s4-aurora.speaking {
   background: #0e0824;
+  transition: background 0.8s ease, opacity 0.6s ease;
 }
 
 /* --- 漂浮動畫 --- */
