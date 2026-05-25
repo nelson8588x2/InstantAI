@@ -681,12 +681,13 @@
             const line1End = dur * 0.45;
 
             if (phase === 0) {
-              // 第一行開始揭露
+              // 第一行開始揭露 — return 確保至少到下次 timeupdate 才判斷切換
               phase = 1;
               if (chatText1) {
                 chatText1.style.setProperty('--reveal-duration', line1End + 's');
                 chatText1.classList.add('animate-in');
               }
+              return;
             }
 
             if (phase === 1 && cur >= line1End) {
@@ -813,11 +814,13 @@
           const line1End = dur * 0.45;
 
           if (phase === 0) {
+            // 第一行開始揭露 — return 確保至少到下次 timeupdate 才判斷切換
             phase = 1;
             if (chatText1) {
               chatText1.style.setProperty('--reveal-duration', line1End + 's');
               chatText1.classList.add('animate-in');
             }
+            return;
           }
 
           if (phase === 1 && cur >= line1End) {
