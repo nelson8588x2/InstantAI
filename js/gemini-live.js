@@ -35,6 +35,13 @@
   let sendIntervalId = null;
   let micPermissionGranted = false;
 
+  // 自動重連相關
+  let reconnectAttempts = 0;
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const BASE_RECONNECT_DELAY = 1000; // 1 秒起始
+  let reconnectTimerId = null;
+  let shouldReconnect = false; // 是否應該在斷線後嘗試重連（僅在 S4 活躍時）
+
   // 光暈控制回調（由外部設定）
   let onAiSpeakingStart = null;
   let onAiSpeakingEnd = null;
@@ -78,6 +85,7 @@
   function connect() {
     if (isConnected || (ws && ws.readyState === WebSocket.CONNECTING)) return;
 
+    shouldReconnect = true;
     setStatus('連線中...');
     ws = new WebSocket(WS_URL);
 
@@ -138,9 +146,40 @@
       const wasConnected = isConnected;
       isConnected = false;
       isRecording = false;
+      stopStreaming();
       console.log('[Gemini Live] WS closed, code:', event.code, 'reason:', event.reason);
       if (wasConnected) setStatus('已斷線');
+      // 自動重連（僅當仍在 S4 頁面且非手動 cleanup 關閉）
+      scheduleReconnect();
     };
+  }
+
+  /* ============================
+     自動重連邏輯（指數退避）
+     ============================ */
+  function scheduleReconnect() {
+    if (!shouldReconnect) return;
+    if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+      setStatus('重連失敗，請重新切換 Script 4');
+      console.warn('[Gemini Live] 已達最大重連次數，停止重試');
+      return;
+    }
+    const delay = BASE_RECONNECT_DELAY * Math.pow(2, reconnectAttempts);
+    reconnectAttempts++;
+    console.log(`[Gemini Live] ${delay}ms 後自動重連（第 ${reconnectAttempts} 次）`);
+    setStatus(`重連中 (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+    reconnectTimerId = setTimeout(() => {
+      reconnectTimerId = null;
+      if (shouldReconnect) connect();
+    }, delay);
+  }
+
+  function cancelReconnect() {
+    if (reconnectTimerId) {
+      clearTimeout(reconnectTimerId);
+      reconnectTimerId = null;
+    }
+    reconnectAttempts = 0;
   }
 
   /* ============================
@@ -161,6 +200,7 @@
     // Setup 完成 → 自動開始錄音串流
     if (msg.setupComplete) {
       isConnected = true;
+      reconnectAttempts = 0; // 連線成功，重置重連計數
       console.log('[Gemini Live] Setup 完成，開始串流錄音...');
       setStatus('對話中');
       startStreaming();
@@ -411,6 +451,8 @@
      清理（離開 S4 時呼叫）
      ============================ */
   function cleanup() {
+    shouldReconnect = false; // 停止自動重連
+    cancelReconnect();
     stopStreaming();
     stopVolumeLoop();
     audioQueue = [];
