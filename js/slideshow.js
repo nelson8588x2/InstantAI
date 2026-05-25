@@ -7,7 +7,7 @@
   const btnNext = document.getElementById('btn-next');
   const pageIndicator = document.getElementById('page-indicator');
 
-  let currentScript = '1';
+  let currentScript = '0';
   let currentIndex = 0;
   let isAnimating = false;
   let glowAnimFrameId = null;
@@ -1747,7 +1747,43 @@
     };
   }
 
+  /* ================================================================
+     Script 0：待機輪播（COMPAL ↔ 彩色膠囊，每 2 秒切換）
+     ================================================================ */
+
+  let s0IntervalId = null;
+
+  function startS0Carousel() {
+    stopS0Carousel();
+    const page1 = document.getElementById('s0-pill-page-1');
+    const page2 = document.getElementById('s0-pill-page-2');
+    if (!page1 || !page2) return;
+
+    let showingLogo = true;
+    s0IntervalId = setInterval(() => {
+      showingLogo = !showingLogo;
+      page1.classList.toggle('active', showingLogo);
+      page2.classList.toggle('active', !showingLogo);
+    }, 2000);
+  }
+
+  function stopS0Carousel() {
+    if (s0IntervalId !== null) {
+      clearInterval(s0IntervalId);
+      s0IntervalId = null;
+    }
+  }
+
+  const s0 = {
+    pageCount: 1,
+    animations: {},
+    resets: {},
+    specialTransitions: {},
+    skipPillPageSwitch: {},
+  };
+
   const scripts = {
+    '0': s0,
     '1': s1,
     '2': s2,
     '3': s3,
@@ -1873,6 +1909,13 @@
     const newContainer = getActiveContainer();
     if (newContainer) newContainer.classList.add('active');
 
+    // S0：進入時啟動輪播，離開時停止
+    if (scriptNum === '0') {
+      startS0Carousel();
+    } else {
+      stopS0Carousel();
+    }
+
     // S4：進入時自動連線，離開時自動斷線
     if (scriptNum === '4' && window.geminiLive) {
       window.geminiLive.connect();
@@ -1885,6 +1928,10 @@
     document.querySelectorAll('.script-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.script === scriptNum);
     });
+
+    // Script 0 隱藏翻頁控制
+    const controlsEl = document.querySelector('.controls');
+    if (controlsEl) controlsEl.classList.toggle('hidden', scriptNum === '0');
 
     // 更新指示器
     const slides = getSlides();
@@ -1927,4 +1974,8 @@
 
   // 初始化
   showSlide(0);
+  startS0Carousel();
+  // Script 0 預設隱藏翻頁控制
+  const controlsInit = document.querySelector('.controls');
+  if (controlsInit) controlsInit.classList.add('hidden');
 })();

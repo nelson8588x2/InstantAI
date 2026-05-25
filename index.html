@@ -11,16 +11,39 @@
 
   <!-- Script 選擇器 -->
   <div class="script-selector">
-    <button class="script-btn active" data-script="1">Script 1</button>
+    <button class="script-btn active" data-script="0">Standby</button>
+    <button class="script-btn" data-script="1">Script 1</button>
     <button class="script-btn" data-script="2">Script 2</button>
     <button class="script-btn" data-script="3">Script 3</button>
     <button class="script-btn" data-script="4">Script 4</button>
   </div>
 
   <!-- ============================================================
+       Script 0（待機畫面：COMPAL ↔ 彩色膠囊 輪播）
+       ============================================================ -->
+  <div class="script-container active" data-script="0">
+    <div class="slideshow-container">
+      <div class="pill">
+        <div class="pill-glow"></div>
+        <div class="pill-inner">
+          <!-- 待機第一幀：COMPAL Logo -->
+          <div class="pill-page active" id="s0-pill-page-1">
+            <img src="images/compal-logo.png" alt="COMPAL" class="logo-img">
+          </div>
+          <!-- 待機第二幀：彩色細長膠囊 -->
+          <div class="pill-page" id="s0-pill-page-2">
+            <div class="rainbow-bar"></div>
+          </div>
+        </div>
+      </div>
+      <div class="slide active" id="s0-slide-1"><div class="slide-content slide-cover"></div></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
        Script 1
        ============================================================ -->
-  <div class="script-container active" data-script="1">
+  <div class="script-container" data-script="1">
     <div class="slideshow-container">
 
       <!-- 固定膠囊容器 -->
