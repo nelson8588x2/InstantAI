@@ -674,7 +674,7 @@
           const startTextSync = () => {
             // 安全取得 duration，若為 NaN 或 Infinity 則給予預設秒數
             const dur = (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) ? sfxVoiceEl.duration : 4.0;
-            const line1End = dur * 0.45;
+            const line1End = dur * 0.57; // 斷句點："from Tom" 之後
 
             // 立即啟動第一行揭露
             if (chatText1) {
@@ -830,7 +830,7 @@
         const startTextSync = () => {
           // 安全取得 duration，若為 NaN 或 Infinity 則給予預設秒數
           const dur = (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) ? sfxVoiceEl.duration : 4.0;
-          const line1End = dur * 0.45;
+          const line1End = dur * 0.52; // 斷句點："delivering" 之後
 
           // 立即啟動第一行揭露
           if (chatText1) {
