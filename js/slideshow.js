@@ -1764,7 +1764,7 @@
       showingLogo = !showingLogo;
       page1.classList.toggle('active', showingLogo);
       page2.classList.toggle('active', !showingLogo);
-    }, 2000);
+    }, 5000);
   }
 
   function stopS0Carousel() {
@@ -1962,6 +1962,8 @@
         e.preventDefault(); nextSlide(); break;
       case 'ArrowLeft':
         e.preventDefault(); prevSlide(); break;
+      case '0': case '1': case '2': case '3': case '4':
+        e.preventDefault(); switchScript(e.key); break;
     }
   });
 

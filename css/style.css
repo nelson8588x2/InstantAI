@@ -374,6 +374,7 @@ html, body {
 /* 小膠囊 icon */
 .mini-pill-icon {
   font-size: 14px;
+  opacity: 1;
 }
 
 /* 紅色膠囊（Mockup） */
@@ -1231,7 +1232,7 @@ html, body {
 
 .rainbow-bar {
   position: relative;
-  width: 100%;
+  width: 50%;
   height: 6px;
   border-radius: 999px;
   z-index: 2;
@@ -1262,7 +1263,7 @@ html, body {
 .rainbow-bar::after {
   content: '';
   position: absolute;
-  inset: -8px -4px;
+  inset: -2px -1px;
   border-radius: inherit;
   background: linear-gradient(
     90deg,
@@ -1273,7 +1274,7 @@ html, body {
     #ff913d 80%,
     #ff5252 100%
   );
-  filter: blur(12px);
+  filter: blur(4px);
   z-index: 1;
   animation: rainbowPulse 2.5s infinite alternate ease-in-out;
 }
