@@ -1,6 +1,6 @@
 """
-統一產生所有 TTS 語音（Rasalgethi 男聲）
-輸出至 audio/voice/ 資料夾
+產生 S2 拆分語音（greeting-1/2, page3-1/2）
+將每句話拆成兩段獨立錄音，解決斷句時間不準問題
 """
 
 import os
@@ -13,34 +13,12 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "audio", "voice")
 
-# 所有語音清單：(檔名, 文字)
+# 拆分語音清單
 TTS_LIST = [
-    # ---- Script 1 ----
-    ("s1-greeting.wav",    "Hi Ana. How can I help you?"),
-    ("s1-transition.wav",  "Good morning, Ana. You've got three schedules today."),
-    ("s1-schedule-1.wav",  "First, meeting with Jenny, likely a calendar appointment."),
-    ("s1-schedule-2.wav",  "Second, grocery, your shopping list or errand."),
-    ("s1-schedule-3.wav",  "Third, call Tom, a phone reminder perhaps for the mock-up schedule."),
-    ("s1-closing.wav",     "Is there anything else I can help you with?"),
-    ("s1-farewell.wav",    "You're welcome. Have a productive day, Ana."),
-
-    # ---- Script 2 ----
-    ("s2-greeting-1.wav",        "Hi Anna, I just received an email from Tom"),
-    ("s2-greeting-2.wav",        "about the Mockup release schedule for February 8th."),
-    ("s2-details-question.wav",  "Would you like to know the full details?"),
-    ("s2-details-answer-1.wav",  "It outlines the Time slots for generating and delivering"),
-    ("s2-details-answer-2.wav",  "the rendering images, plus a final proposal review checkpoint."),
-    ("s2-calendar-question.wav", "Would you like me to add it to your calendar with a reminder?"),
-    ("s2-calendar-confirm.wav",  "I'll add the schedule and set a reminder for you."),
-    ("s2-anything-else.wav",     "Is there anything else I can help you with?"),
-    ("s2-farewell.wav",          "You're welcome. Have a productive day, Anna."),
-
-    # ---- Script 3 ----
-    ("s3-part1.wav",          "Sure, based on Tom's mail, we should release the mockup data on February 8th."),
-    ("s3-part2.wav",          "Before that, we need to get design approve on January 18th."),
-    ("s3-part3.wav",          "Then, we have one week to prepare for the CMF and artwork document for the next week."),
-    ("s3-anything-else.wav",  "Is there anything else I can help you with?"),
-    ("s3-farewell.wav",       "You're welcome Anna. Let me know if you need help preparing for the meeting with Jenny in the noon."),
+    ("s2-greeting-1.wav", "Hi Anna, I just received an email from Tom"),
+    ("s2-greeting-2.wav", "about the Mockup release schedule for February 8th."),
+    ("s2-details-answer-1.wav", "It outlines the Time slots for generating and delivering"),
+    ("s2-details-answer-2.wav", "the rendering images, plus a final proposal review checkpoint."),
 ]
 
 
@@ -98,7 +76,7 @@ def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     print("=" * 60)
-    print("重新產生所有 TTS 語音（Rasalgethi 男聲）")
+    print("產生 S2 拆分語音（Rasalgethi 男聲）")
     print(f"輸出目錄：{OUTPUT_DIR}")
     print(f"共 {len(TTS_LIST)} 個語音")
     print("=" * 60)

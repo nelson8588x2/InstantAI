@@ -110,9 +110,11 @@
     's1-sfx-voice-page3-third':    0.91,  // RMS 4179
     's1-sfx-voice-page3-closing':  0.65,  // RMS 5879
     's1-sfx-voice-page4':          0.88,  // RMS 4326
-    's2-sfx-voice-greeting':       1.20,  // RMS 2549（偏小，拉高）
+    's2-sfx-voice-greeting-1':     1.20,  // RMS 待校準（拆分音檔）
+    's2-sfx-voice-greeting-2':     1.20,  // RMS 待校準（拆分音檔）
     's2-sfx-voice-details-q':      0.88,  // RMS 4294
-    's2-sfx-voice-page3':          0.93,  // RMS 4080
+    's2-sfx-voice-page3-1':        0.93,  // RMS 待校準（拆分音檔）
+    's2-sfx-voice-page3-2':        0.93,  // RMS 待校準（拆分音檔）
     's2-sfx-voice-calendar-q':     1.20,  // RMS 2886（偏小，拉高）
     's2-sfx-voice-page4':          1.05,  // RMS 3614
     's2-sfx-voice-anything-else':  0.61,  // RMS 6276（最大聲）
@@ -632,7 +634,8 @@
 
       stopGlow();
       stopAudio('sfx-icon-appear');
-      stopAudio('s2-sfx-voice-greeting');
+      stopAudio('s2-sfx-voice-greeting-1');
+      stopAudio('s2-sfx-voice-greeting-2');
       stopAudio('s2-sfx-voice-details-q');
       stopAudio('sfx-gmail-notify');
       isAnimating = false;
@@ -653,7 +656,8 @@
       const chatText2 = line2 ? line2.querySelector('.chat-text') : null;
       const gmailCircle = document.getElementById('s2-gmail-circle');
       const pillsWrap = document.getElementById('s2-mini-pills');
-      const sfxVoiceEl = document.getElementById('s2-sfx-voice-greeting');
+      const voiceEl1 = document.getElementById('s2-sfx-voice-greeting-1');
+      const voiceEl2 = document.getElementById('s2-sfx-voice-greeting-2');
 
       isAnimating = true;
 
@@ -661,99 +665,66 @@
       if (aiIcon) aiIcon.classList.add('animate-in');
       playAudio('sfx-icon-appear');
 
-      // 步驟 2：600ms 後語音開始 + 第一行文字
+      // 安全取得 duration 的輔助函式
+      const getDur = (el) => (el && el.duration && isFinite(el.duration)) ? el.duration : 3.0;
+
+      // 步驟 2：600ms 後播放第一段語音 + 第一行文字
       setAnimTimeout(() => {
-        const voicePlaying = playAudio('s2-sfx-voice-greeting');
         if (line1) line1.classList.add('active');
+        const voice1Playing = playAudio('s2-sfx-voice-greeting-1');
 
-        if (voicePlaying && sfxVoiceEl) {
-          startGlowWithAudio(sfxVoiceEl);
-          let intentionalPause = false; // 防止中間暫停觸發 stopGlow
+        if (voice1Playing && voiceEl1) {
+          startGlowWithAudio(voiceEl1);
 
-          // Duration 防呆 + 備用計時器，解決 Autoplay 阻擋 + duration NaN 問題
-          const startTextSync = () => {
-            // 安全取得 duration，若為 NaN 或 Infinity 則給予預設秒數
-            const dur = (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) ? sfxVoiceEl.duration : 4.0;
-            const line1End = dur * 0.57; // 斷句點："from Tom" 之後
+          // 第一行揭露動畫：時長 = 第一段語音長度
+          if (chatText1) {
+            const dur1 = getDur(voiceEl1);
+            chatText1.style.setProperty('--reveal-duration', dur1 + 's');
+            chatText1.classList.add('animate-in');
+          }
 
-            // 立即啟動第一行揭露
-            if (chatText1) {
-              const elapsed = isFinite(sfxVoiceEl.currentTime) ? sfxVoiceEl.currentTime : 0;
-              const revealDur = Math.max(line1End - elapsed, 0.3);
-              chatText1.style.setProperty('--reveal-duration', revealDur + 's');
-              chatText1.classList.add('animate-in');
-            }
-
-            let hasSwitched = false; // 防呆旗標，確保切換邏輯只執行一次
-
-            // 將切換第二行的邏輯獨立出來
-            const triggerLineSwitch = () => {
-              if (hasSwitched) return;
-              hasSwitched = true;
-              sfxVoiceEl.removeEventListener('timeupdate', onTimeUpdate);
-
-              // 到達切換點 → 暫停語音（如果有在播放的話）
-              intentionalPause = true;
-              sfxVoiceEl.pause();
-
-              // 停頓 200ms 後：第一行消失，恢復語音，第二行出現
+          // 第一段結束 → 停頓 200ms → 淡出第一行 → 顯示第二行 + 播放第二段
+          voiceEl1.onended = () => {
+            stopGlow();
+            setAnimTimeout(() => {
+              // 第一行淡出
+              if (chatText1) {
+                chatText1.style.opacity = '1';
+                chatText1.style.clipPath = 'inset(0 0 0 0)';
+                chatText1.classList.remove('animate-in');
+                chatText1.style.setProperty('--fadeout-duration', '0.3s');
+                chatText1.classList.add('animate-out');
+              }
+              // 350ms 後切換行 + 播放第二段
               setAnimTimeout(() => {
-                if (chatText1) {
-                  chatText1.style.opacity = '1';
-                  chatText1.style.clipPath = 'inset(0 0 0 0)';
-                  chatText1.classList.remove('animate-in');
-                  chatText1.style.setProperty('--fadeout-duration', '0.3s');
-                  chatText1.classList.add('animate-out');
-                }
-                setAnimTimeout(() => {
-                  if (line1) line1.classList.remove('active');
-                  if (line2) line2.classList.add('active');
-                  intentionalPause = false;
-                  sfxVoiceEl.play().catch(() => {});
-                  startGlowWithAudio(sfxVoiceEl);
-                  const remaining = dur - (isFinite(sfxVoiceEl.currentTime) ? sfxVoiceEl.currentTime : line1End);
-                  if (chatText2 && remaining > 0) {
-                    chatText2.style.setProperty('--reveal-duration', remaining + 's');
-                    chatText2.classList.add('animate-in');
-                  } else if (chatText2) {
+                if (line1) line1.classList.remove('active');
+                if (line2) line2.classList.add('active');
+
+                const voice2Playing = playAudio('s2-sfx-voice-greeting-2');
+                if (voice2Playing && voiceEl2) {
+                  startGlowWithAudio(voiceEl2);
+                  const dur2 = getDur(voiceEl2);
+                  if (chatText2) {
+                    chatText2.style.setProperty('--reveal-duration', dur2 + 's');
                     chatText2.classList.add('animate-in');
                   }
-                }, 350);
-              }, 200);
-            };
-
-            // 正常情況下的 timeupdate 監聽
-            const onTimeUpdate = () => {
-              if (sfxVoiceEl.currentTime >= line1End) {
-                triggerLineSwitch();
-              }
-            };
-            sfxVoiceEl.addEventListener('timeupdate', onTimeUpdate);
-
-            // 備用計時器：Autoplay 阻擋時 timeupdate 不會觸發，時間到強制切換
-            setAnimTimeout(() => {
-              triggerLineSwitch();
-            }, line1End * 1000);
-
-            // 語音結束 → 清理 listener + 小膠囊 + Gmail + 問句
-            sfxVoiceEl.onended = () => {
-              sfxVoiceEl.removeEventListener('timeupdate', onTimeUpdate);
-              stopGlow();
-              s2.afterGreetingEnded(chatText2, line2, gmailCircle, pillsWrap, 's2-sfx-voice-details-q');
-            };
-            sfxVoiceEl.onpause = () => { if (!intentionalPause) stopGlow(); };
+                  voiceEl2.onended = () => {
+                    stopGlow();
+                    s2.afterGreetingEnded(chatText2, line2, gmailCircle, pillsWrap, 's2-sfx-voice-details-q');
+                  };
+                  voiceEl2.onpause = () => { stopGlow(); };
+                } else {
+                  // 第二段無法播放 → 備用計時器
+                  if (chatText2) chatText2.classList.add('animate-in');
+                  setAnimTimeout(() => {
+                    stopGlow();
+                    s2.afterGreetingEnded(chatText2, line2, gmailCircle, pillsWrap, 's2-sfx-voice-details-q');
+                  }, getDur(voiceEl2) * 1000);
+                }
+              }, 350);
+            }, 200);
           };
-
-          // metadata 已就緒 → 直接啟動；否則等 loadedmetadata 事件
-          if (sfxVoiceEl.readyState >= 1) {
-            startTextSync();
-          } else {
-            sfxVoiceEl.addEventListener('loadedmetadata', startTextSync, { once: true });
-            // 若 loadedmetadata 也不觸發（Autoplay 完全阻擋載入），備用直接啟動
-            setAnimTimeout(() => {
-              if (sfxVoiceEl.readyState < 1) startTextSync();
-            }, 300);
-          }
+          voiceEl1.onpause = () => { stopGlow(); };
 
         } else {
           // 無語音備用
@@ -788,7 +759,8 @@
       if (calCircle) calCircle.classList.remove('animate-in');
 
       stopGlow();
-      stopAudio('s2-sfx-voice-page3');
+      stopAudio('s2-sfx-voice-page3-1');
+      stopAudio('s2-sfx-voice-page3-2');
       stopAudio('s2-sfx-voice-calendar-q');
       stopAudio('sfx-gmail-notify');
       isAnimating = false;
@@ -808,7 +780,8 @@
       const chatText2 = line2 ? line2.querySelector('.chat-text') : null;
       const calCircle = document.getElementById('s2-calendar-circle');
       const pillsWrap = document.getElementById('s2-p3-mini-pills');
-      const sfxVoiceEl = document.getElementById('s2-sfx-voice-page3');
+      const voiceEl1 = document.getElementById('s2-sfx-voice-page3-1');
+      const voiceEl2 = document.getElementById('s2-sfx-voice-page3-2');
 
       isAnimating = true;
 
@@ -817,43 +790,29 @@
       const pg = getPillGlow();
       if (pg) pg.classList.add('active');
 
-      // 步驟 2：800ms 後語音開始 + 第一行文字
+      // 安全取得 duration 的輔助函式
+      const getDur = (el) => (el && el.duration && isFinite(el.duration)) ? el.duration : 3.0;
+
+      // 步驟 2：800ms 後播放第一段語音 + 第一行文字
       setAnimTimeout(() => {
-      if (line1) line1.classList.add('active');
-      const voicePlaying = playAudio('s2-sfx-voice-page3');
+        if (line1) line1.classList.add('active');
+        const voice1Playing = playAudio('s2-sfx-voice-page3-1');
 
-      if (voicePlaying && sfxVoiceEl) {
-        startGlowWithAudio(sfxVoiceEl);
-        let intentionalPause = false; // 防止中間暫停觸發 stopGlow
+        if (voice1Playing && voiceEl1) {
+          startGlowWithAudio(voiceEl1);
 
-        // Duration 防呆 + 備用計時器，解決 Autoplay 阻擋 + duration NaN 問題
-        const startTextSync = () => {
-          // 安全取得 duration，若為 NaN 或 Infinity 則給予預設秒數
-          const dur = (sfxVoiceEl.duration && isFinite(sfxVoiceEl.duration)) ? sfxVoiceEl.duration : 4.0;
-          const line1End = dur * 0.52; // 斷句點："delivering" 之後
-
-          // 立即啟動第一行揭露
+          // 第一行揭露動畫：時長 = 第一段語音長度
           if (chatText1) {
-            const elapsed = isFinite(sfxVoiceEl.currentTime) ? sfxVoiceEl.currentTime : 0;
-            const revealDur = Math.max(line1End - elapsed, 0.3);
-            chatText1.style.setProperty('--reveal-duration', revealDur + 's');
+            const dur1 = getDur(voiceEl1);
+            chatText1.style.setProperty('--reveal-duration', dur1 + 's');
             chatText1.classList.add('animate-in');
           }
 
-          let hasSwitched = false; // 防呆旗標，確保切換邏輯只執行一次
-
-          // 將切換第二行的邏輯獨立出來
-          const triggerLineSwitch = () => {
-            if (hasSwitched) return;
-            hasSwitched = true;
-            sfxVoiceEl.removeEventListener('timeupdate', onTimeUpdate);
-
-            // 到達切換點 → 暫停語音（如果有在播放的話）
-            intentionalPause = true;
-            sfxVoiceEl.pause();
-
-            // 停頓 200ms 後：第一行消失，恢復語音，第二行出現
+          // 第一段結束 → 停頓 200ms → 淡出第一行 → 顯示第二行 + 播放第二段
+          voiceEl1.onended = () => {
+            stopGlow();
             setAnimTimeout(() => {
+              // 第一行淡出
               if (chatText1) {
                 chatText1.style.opacity = '1';
                 chatText1.style.clipPath = 'inset(0 0 0 0)';
@@ -861,64 +820,45 @@
                 chatText1.style.setProperty('--fadeout-duration', '0.3s');
                 chatText1.classList.add('animate-out');
               }
+              // 350ms 後切換行 + 播放第二段
               setAnimTimeout(() => {
                 if (line1) line1.classList.remove('active');
                 if (line2) line2.classList.add('active');
-                intentionalPause = false;
-                sfxVoiceEl.play().catch(() => {});
-                startGlowWithAudio(sfxVoiceEl);
-                const remaining = dur - (isFinite(sfxVoiceEl.currentTime) ? sfxVoiceEl.currentTime : line1End);
-                if (chatText2 && remaining > 0) {
-                  chatText2.style.setProperty('--reveal-duration', remaining + 's');
-                  chatText2.classList.add('animate-in');
-                } else if (chatText2) {
-                  chatText2.classList.add('animate-in');
+
+                const voice2Playing = playAudio('s2-sfx-voice-page3-2');
+                if (voice2Playing && voiceEl2) {
+                  startGlowWithAudio(voiceEl2);
+                  const dur2 = getDur(voiceEl2);
+                  if (chatText2) {
+                    chatText2.style.setProperty('--reveal-duration', dur2 + 's');
+                    chatText2.classList.add('animate-in');
+                  }
+                  voiceEl2.onended = () => {
+                    stopGlow();
+                    s2.afterGreetingEnded(chatText2, line2, calCircle, pillsWrap, 's2-sfx-voice-calendar-q');
+                  };
+                  voiceEl2.onpause = () => { stopGlow(); };
+                } else {
+                  // 第二段無法播放 → 備用計時器
+                  if (chatText2) chatText2.classList.add('animate-in');
+                  setAnimTimeout(() => {
+                    stopGlow();
+                    s2.afterGreetingEnded(chatText2, line2, calCircle, pillsWrap, 's2-sfx-voice-calendar-q');
+                  }, getDur(voiceEl2) * 1000);
                 }
               }, 350);
             }, 200);
           };
+          voiceEl1.onpause = () => { stopGlow(); };
 
-          // 正常情況下的 timeupdate 監聽
-          const onTimeUpdate = () => {
-            if (sfxVoiceEl.currentTime >= line1End) {
-              triggerLineSwitch();
-            }
-          };
-          sfxVoiceEl.addEventListener('timeupdate', onTimeUpdate);
-
-          // 備用計時器：Autoplay 阻擋時 timeupdate 不會觸發，時間到強制切換
-          setAnimTimeout(() => {
-            triggerLineSwitch();
-          }, line1End * 1000);
-
-          // 語音結束 → 清理 listener + 小膠囊 + 行事曆 + 問句
-          sfxVoiceEl.onended = () => {
-            sfxVoiceEl.removeEventListener('timeupdate', onTimeUpdate);
-            stopGlow();
-            s2.afterGreetingEnded(chatText2, line2, calCircle, pillsWrap, 's2-sfx-voice-calendar-q');
-          };
-          sfxVoiceEl.onpause = () => { if (!intentionalPause) stopGlow(); };
-        };
-
-        // metadata 已就緒 → 直接啟動；否則等 loadedmetadata 事件
-        if (sfxVoiceEl.readyState >= 1) {
-          startTextSync();
         } else {
-          sfxVoiceEl.addEventListener('loadedmetadata', startTextSync, { once: true });
-          // 若 loadedmetadata 也不觸發（Autoplay 完全阻擋載入），備用直接啟動
+          // 無語音備用
+          if (chatText1) chatText1.classList.add('animate-in');
           setAnimTimeout(() => {
-            if (sfxVoiceEl.readyState < 1) startTextSync();
-          }, 300);
+            stopGlow();
+            s2.afterGreetingEnded(chatText1, line1, calCircle, pillsWrap, 's2-sfx-voice-calendar-q');
+          }, 3000);
         }
-
-      } else {
-        // 無語音備用
-        if (chatText1) chatText1.classList.add('animate-in');
-        setAnimTimeout(() => {
-          stopGlow();
-          s2.afterGreetingEnded(chatText1, line1, calCircle, pillsWrap, 's2-sfx-voice-calendar-q');
-        }, 3000);
-      }
       }, 800);
     },
 
