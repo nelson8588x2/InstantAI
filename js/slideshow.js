@@ -1745,10 +1745,10 @@
   const s4Presets = {
     listening: {
       blur: 50, speed: 16, noise: 0.35,
-      c1: '#0055ff', c2: '#00bbff', c3: '#6a00ff', c4: '#ffffff'
+      c1: '#0055ff', c2: '#00bbff', c3: '#6a00ff', c4: '#cdcdcd'
     },
     speaking: {
-      blur: 35, speed: 8, noise: 0.4,
+      blur: 50, speed: 16, noise: 0.4,
       c1: '#ff1453', c2: '#4d00ff', c3: '#0066ff', c4: '#ff4d00'
     }
   };
