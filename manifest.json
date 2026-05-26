@@ -1,0 +1,16 @@
+{
+  "name": "InstantAI Demo Kit",
+  "short_name": "InstantAI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#cdcdcd",
+  "theme_color": "#cdcdcd",
+  "icons": [
+    {
+      "src": "images/app-icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
