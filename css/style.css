@@ -1274,7 +1274,7 @@ html, body {
     #4da4ff 100%
   );
   background-size: 200% 100%;
-  animation: rainbowFlow 4s linear infinite;
+  animation: rainbowFlow 8s linear infinite;
   box-shadow:
     inset 0 1px 3px rgba(255, 255, 255, 0.6),
     inset 0 -1px 3px rgba(0, 0, 0, 0.2);
@@ -1298,7 +1298,7 @@ html, body {
     #4da4ff 100%
   );
   background-size: 200% 100%;
-  animation: rainbowFlow 4s linear infinite, rainbowPulse 2.5s infinite alternate ease-in-out;
+  animation: rainbowFlow 8s linear infinite, rainbowPulse 2.5s infinite alternate ease-in-out;
   filter: blur(4px);
   z-index: 1;
 }
@@ -1393,8 +1393,8 @@ html, body {
 .s4-aurora-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(32px);
-  mix-blend-mode: multiply;
+  filter: blur(38px);
+  mix-blend-mode: screen;
   will-change: transform, opacity;
   /* 色調切換時平滑過渡 */
   transition: background 0.8s ease;
@@ -1480,20 +1480,20 @@ html, body {
 
 /* --- 漂浮動畫 --- */
 @keyframes s4drift1 {
-  0%   { transform: translate(0, 0)     scale(var(--blob-scale, 1)); }
-  100% { transform: translate(60px, 8px) scale(var(--blob-scale, 1)); }
+  0%   { transform: translate(0, 0)       scale(var(--blob-scale, 1)); }
+  100% { transform: translate(90px, 12px)  scale(var(--blob-scale, 1)); }
 }
 @keyframes s4drift2 {
-  0%   { transform: translate(0, 0)      scale(var(--blob-scale, 1)); }
-  100% { transform: translate(-50px, -6px) scale(var(--blob-scale, 1)); }
+  0%   { transform: translate(0, 0)        scale(var(--blob-scale, 1)); }
+  100% { transform: translate(-80px, -10px) scale(var(--blob-scale, 1)); }
 }
 @keyframes s4drift3 {
-  0%   { transform: translate(0, 0)     scale(var(--blob-scale, 1)); }
-  100% { transform: translate(30px, 5px) scale(var(--blob-scale, 1)); }
+  0%   { transform: translate(0, 0)       scale(var(--blob-scale, 1)); }
+  100% { transform: translate(50px, 8px)  scale(var(--blob-scale, 1)); }
 }
 @keyframes s4drift4 {
-  0%   { transform: translate(0, 0)      scale(var(--blob-scale, 1)); }
-  100% { transform: translate(-20px, 4px) scale(var(--blob-scale, 1)); }
+  0%   { transform: translate(0, 0)        scale(var(--blob-scale, 1)); }
+  100% { transform: translate(-35px, 6px)  scale(var(--blob-scale, 1)); }
 }
 
 /* --- Compal Logo 在 aurora 上層 --- */
