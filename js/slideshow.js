@@ -1741,47 +1741,68 @@
   };
 
   /* --- S4 Aurora 光效控制 --- */
+  /* S4 流體預設色板 */
+  const s4Presets = {
+    listening: {
+      blur: 50, speed: 16, noise: 0.35,
+      c1: '#0055ff', c2: '#00bbff', c3: '#6a00ff', c4: '#ffffff'
+    },
+    speaking: {
+      blur: 35, speed: 8, noise: 0.4,
+      c1: '#ff1453', c2: '#4d00ff', c3: '#0066ff', c4: '#ff4d00'
+    }
+  };
+
   const s4Aurora = {
     el: null,
-    blobs: [],
 
-    /** 啟動 aurora（進入 S4 時） */
+    /** 啟動流體效果（進入 S4 時） */
     start() {
       this.el = document.getElementById('s4-aurora');
       if (!this.el) return;
-      this.blobs = this.el.querySelectorAll('.s4-aurora-blob');
-      this.el.classList.add('active', 'listening'); // 預設聆聽模式
+      this.el.classList.add('active');
+      this._applyPreset('listening'); // 預設聆聽模式
     },
 
-    /** 停止 aurora（離開 S4 時） */
+    /** 停止流體效果（離開 S4 時） */
     stop() {
       if (!this.el) return;
-      this.el.classList.remove('active', 'listening', 'speaking');
-      this.blobs.forEach(b => b.style.removeProperty('--blob-scale'));
+      this.el.classList.remove('active');
       this.el = null;
     },
 
-    /** 切換為 AI 回答模式（紫藍色調） */
+    /** 切換為 AI 回答模式（科技桃紅紫） */
     setSpeaking() {
-      if (!this.el) return;
-      this.el.classList.remove('listening');
-      this.el.classList.add('speaking');
+      this._applyPreset('speaking');
     },
 
-    /** 切換為聆聽模式（偏白色調） */
+    /** 切換為聆聽模式（冰藍紫） */
     setListening() {
-      if (!this.el) return;
-      this.el.classList.remove('speaking');
-      this.el.classList.add('listening');
+      this._applyPreset('listening');
     },
 
-    /** 根據音量更新 blob 大小（volume: 0~1） */
+    /** 根據音量動態微調 blur（volume: 0~1） */
     updateVolume(volume) {
-      if (!this.blobs.length) return;
-      // 將 0~1 映射為 scale 0.8~1.6，讓光團跟著音量呼吸
-      const scale = 0.8 + volume * 0.8;
-      this.blobs.forEach(b => b.style.setProperty('--blob-scale', scale.toFixed(2)));
+      if (!this.el) return;
+      // 音量越大 blur 越小 → 輪廓越銳利；音量小則更柔和
+      const baseBlur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s4-blur')) || 35;
+      const dynamicBlur = baseBlur + (1 - volume) * 15 - volume * 10;
+      this.el.querySelector('.s4-fluid-canvas').style.filter = `blur(${Math.max(10, dynamicBlur).toFixed(0)}px)`;
     },
+
+    /** 套用預設色板（透過 CSS 變數） */
+    _applyPreset(name) {
+      const p = s4Presets[name];
+      if (!p) return;
+      const r = document.documentElement.style;
+      r.setProperty('--s4-blur', p.blur + 'px');
+      r.setProperty('--s4-anim-speed', p.speed + 's');
+      r.setProperty('--s4-noise-opacity', p.noise);
+      r.setProperty('--s4-c1', p.c1);
+      r.setProperty('--s4-c2', p.c2);
+      r.setProperty('--s4-c3', p.c3);
+      r.setProperty('--s4-c4', p.c4);
+    }
   };
 
   // Gemini Live 回調：AI 說話 / 結束 + 音量
