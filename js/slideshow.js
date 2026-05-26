@@ -1744,7 +1744,7 @@
   /* S4 流體預設色板 */
   const s4Presets = {
     listening: {
-      blur: 50, speed: 16, noise: 0.35,
+      blur: 50, speed: 16, noise: 0.4,
       c1: '#0055ff', c2: '#00bbff', c3: '#6a00ff', c4: '#cdcdcd'
     },
     speaking: {
@@ -1781,13 +1781,17 @@
       this._applyPreset('listening');
     },
 
-    /** 根據音量動態微調 blur（volume: 0~1） */
+    /** 根據音量驅動視覺能量（volume: 0~1） */
     updateVolume(volume) {
       if (!this.el) return;
-      // 音量越大 blur 越小 → 輪廓越銳利；音量小則更柔和
-      const baseBlur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s4-blur')) || 35;
-      const dynamicBlur = baseBlur + (1 - volume) * 15 - volume * 10;
-      this.el.querySelector('.s4-fluid-canvas').style.filter = `blur(${Math.max(10, dynamicBlur).toFixed(0)}px)`;
+      const canvas = this.el.querySelector('.s4-fluid-canvas');
+      if (!canvas) return;
+      // 大聲 = 更亮、更飽和、更高對比（強烈能量感）
+      const baseBlur = getComputedStyle(document.documentElement).getPropertyValue('--s4-blur').trim() || '50px';
+      const brightness = (0.9 + volume * 0.3).toFixed(2);
+      const saturate  = (0.8 + volume * 0.4).toFixed(2);
+      const contrast  = (1.0 + volume * 0.2).toFixed(2);
+      canvas.style.filter = `blur(${baseBlur}) brightness(${brightness}) saturate(${saturate}) contrast(${contrast})`;
     },
 
     /** 套用預設色板（透過 CSS 變數） */
