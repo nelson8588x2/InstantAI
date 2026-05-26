@@ -1257,7 +1257,7 @@ html, body {
   z-index: 2;
 }
 
-/* 燈管本體 */
+/* 燈管本體（緩慢流動） */
 .rainbow-bar::before {
   content: '';
   position: absolute;
@@ -1266,19 +1266,22 @@ html, body {
   background: linear-gradient(
     90deg,
     #4da4ff 0%,
-    #4ae3d8 20%,
-    #88e751 40%,
-    #fce12d 60%,
-    #ff913d 80%,
-    #ff5252 100%
+    #4ae3d8 16%,
+    #88e751 33%,
+    #fce12d 50%,
+    #ff913d 66%,
+    #ff5252 83%,
+    #4da4ff 100%
   );
+  background-size: 200% 100%;
+  animation: rainbowFlow 4s linear infinite;
   box-shadow:
     inset 0 1px 3px rgba(255, 255, 255, 0.6),
     inset 0 -1px 3px rgba(0, 0, 0, 0.2);
   z-index: 2;
 }
 
-/* 發光外暈（呼吸燈） */
+/* 發光外暈（呼吸 + 流動） */
 .rainbow-bar::after {
   content: '';
   position: absolute;
@@ -1287,15 +1290,22 @@ html, body {
   background: linear-gradient(
     90deg,
     #4da4ff 0%,
-    #4ae3d8 20%,
-    #88e751 40%,
-    #fce12d 60%,
-    #ff913d 80%,
-    #ff5252 100%
+    #4ae3d8 16%,
+    #88e751 33%,
+    #fce12d 50%,
+    #ff913d 66%,
+    #ff5252 83%,
+    #4da4ff 100%
   );
+  background-size: 200% 100%;
+  animation: rainbowFlow 4s linear infinite, rainbowPulse 2.5s infinite alternate ease-in-out;
   filter: blur(4px);
   z-index: 1;
-  animation: rainbowPulse 2.5s infinite alternate ease-in-out;
+}
+
+@keyframes rainbowFlow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: -200% 50%; }
 }
 
 @keyframes rainbowPulse {
@@ -1371,7 +1381,7 @@ html, body {
   z-index: 0;
   opacity: 0;
   transition: opacity 0.6s ease;
-  background: #1a1028;
+  background: #cdcdcd;
 }
 
 /* 進入 S4 時顯示 aurora */
@@ -1379,12 +1389,12 @@ html, body {
   opacity: 1;
 }
 
-/* --- Aurora 浮動光團 --- */
+/* --- Aurora 浮動光團（RGB 三原色 + 灰底） --- */
 .s4-aurora-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(28px);
-  mix-blend-mode: screen;
+  filter: blur(32px);
+  mix-blend-mode: multiply;
   will-change: transform, opacity;
   /* 色調切換時平滑過渡 */
   transition: background 0.8s ease;
@@ -1392,63 +1402,79 @@ html, body {
   --blob-scale: 1;
 }
 
-/* 光團 1：左側，偏紫（寬度 ≈ 2/3 膠囊） */
+/* 光團 1：左側 — 紅 Red（寬度 ≈ 2/3 膠囊） */
 .s4-blob-1 {
   width: calc(var(--pill-width) * 0.67);
   height: 160%;
   left: -15%;
   top: -40%;
-  background: radial-gradient(ellipse at center, rgba(120, 60, 220, 0.9), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(230, 30, 30, 0.85), transparent 70%);
   animation: s4drift1 6s ease-in-out infinite alternate;
 }
 
-/* 光團 2：右側，偏藍（寬度 ≈ 2/3 膠囊） */
+/* 光團 2：右側 — 綠 Green（寬度 ≈ 2/3 膠囊） */
 .s4-blob-2 {
   width: calc(var(--pill-width) * 0.67);
   height: 160%;
   right: -15%;
   bottom: -40%;
-  background: radial-gradient(ellipse at center, rgba(60, 120, 255, 0.85), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(30, 200, 30, 0.85), transparent 70%);
   animation: s4drift2 7s ease-in-out infinite alternate;
 }
 
-/* 光團 3：中央，偏青白（寬度 ≈ 2/3 膠囊） */
+/* 光團 3：中央 — 藍 Blue（寬度 ≈ 2/3 膠囊） */
 .s4-blob-3 {
   width: calc(var(--pill-width) * 0.67);
   height: 160%;
   left: 15%;
   top: -35%;
-  background: radial-gradient(ellipse at center, rgba(140, 180, 255, 0.8), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(30, 60, 230, 0.85), transparent 70%);
   animation: s4drift3 5s ease-in-out infinite alternate;
 }
 
-/* --- 聆聽模式：偏白色調 --- */
+/* 光團 4：中心 — 灰底柔光（讓混色更柔和） */
+.s4-blob-4 {
+  width: calc(var(--pill-width) * 0.5);
+  height: 120%;
+  left: 25%;
+  top: -20%;
+  background: radial-gradient(ellipse at center, rgba(205, 205, 205, 0.6), transparent 70%);
+  animation: s4drift4 8s ease-in-out infinite alternate;
+}
+
+/* --- 聆聽模式：偏藍 / 青 / 綠（加色混合冷色調） --- */
 .s4-aurora.listening .s4-blob-1 {
-  background: radial-gradient(ellipse at center, rgba(200, 200, 240, 0.9), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(0, 180, 220, 0.85), transparent 70%);
 }
 .s4-aurora.listening .s4-blob-2 {
-  background: radial-gradient(ellipse at center, rgba(180, 210, 255, 0.85), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(0, 210, 120, 0.85), transparent 70%);
 }
 .s4-aurora.listening .s4-blob-3 {
-  background: radial-gradient(ellipse at center, rgba(230, 230, 255, 0.9), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(30, 80, 240, 0.9), transparent 70%);
+}
+.s4-aurora.listening .s4-blob-4 {
+  background: radial-gradient(ellipse at center, rgba(100, 230, 230, 0.5), transparent 70%);
 }
 .s4-aurora.listening {
-  background: #2a2a3a;
+  background: #cdcdcd;
   transition: background 0.8s ease, opacity 0.6s ease;
 }
 
-/* --- 回答模式：偏紫藍色調（附圖配色） --- */
+/* --- 回答模式：偏紅 / 黃 / 洋紅（加色混合暖色調） --- */
 .s4-aurora.speaking .s4-blob-1 {
-  background: radial-gradient(ellipse at center, rgba(90, 30, 180, 0.95), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(230, 30, 30, 0.9), transparent 70%);
 }
 .s4-aurora.speaking .s4-blob-2 {
-  background: radial-gradient(ellipse at center, rgba(40, 100, 240, 0.9), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(240, 200, 0, 0.85), transparent 70%);
 }
 .s4-aurora.speaking .s4-blob-3 {
-  background: radial-gradient(ellipse at center, rgba(100, 160, 255, 0.85), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(200, 0, 150, 0.9), transparent 70%);
+}
+.s4-aurora.speaking .s4-blob-4 {
+  background: radial-gradient(ellipse at center, rgba(255, 120, 50, 0.5), transparent 70%);
 }
 .s4-aurora.speaking {
-  background: #0e0824;
+  background: #cdcdcd;
   transition: background 0.8s ease, opacity 0.6s ease;
 }
 
@@ -1465,13 +1491,17 @@ html, body {
   0%   { transform: translate(0, 0)     scale(var(--blob-scale, 1)); }
   100% { transform: translate(30px, 5px) scale(var(--blob-scale, 1)); }
 }
+@keyframes s4drift4 {
+  0%   { transform: translate(0, 0)      scale(var(--blob-scale, 1)); }
+  100% { transform: translate(-20px, 4px) scale(var(--blob-scale, 1)); }
+}
 
 /* --- Compal Logo 在 aurora 上層 --- */
 .s4-logo {
   position: relative;
   z-index: 2;
-  filter: brightness(2.5);
-  opacity: 0.95;
+  filter: brightness(0.9);
+  opacity: 1;
 }
 
 .s4-status {
