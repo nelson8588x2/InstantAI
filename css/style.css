@@ -1,6 +1,6 @@
 /* 大膠囊設計參數（來自 PPT：1.39cm × 15.52cm，背景 19.05cm × 33.87cm） */
 :root {
-  --pill-height: 56px;
+  --pill-height: 54px;
   --pill-ratio: 11.1655;                                     /* 15.52 / 1.39 */
   --pill-width: calc(var(--pill-height) * var(--pill-ratio));  /* ≈ 558px */
   --pill-radius: calc(var(--pill-height) / 2);                 /* 25px */
@@ -38,7 +38,7 @@ html, body {
 /* Script 名稱標示（大膠囊正上方，與膠囊 top 同步） */
 .script-label {
   position: fixed;
-  top: calc(40% - var(--pill-height) / 2 - 80px);
+  top: calc(42% - var(--pill-height) / 2 - 80px);
   left: 50%;
   transform: translateX(-50%);
   font-size: 60px;
@@ -126,7 +126,7 @@ html, body {
    ======================================== */
 .pill {
   position: fixed;
-  top: 40%;
+  top: 42%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: var(--pill-width);
