@@ -127,7 +127,7 @@ html, body {
 .pill {
   position: fixed;
   top: 43%;
-  left: 50%;
+  left: 49.5%;
   transform: translate(-50%, -50%);
   width: var(--pill-width);
   height: var(--pill-height);
