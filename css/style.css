@@ -4,7 +4,10 @@
   --pill-ratio: 11.1655;                                     /* 15.52 / 1.39 */
   --pill-width: calc(var(--pill-height) * var(--pill-ratio));  /* ≈ 558px */
   --pill-radius: calc(var(--pill-height) / 2);                 /* 25px */
-  --pill-padding: calc(var(--pill-radius) - 15px);             /* 10px = radius - AI-icon-half */
+  --pill-padding: calc(var(--pill-radius) - 15px);             /* 通用內距 */
+  --icon-left-offset: calc(var(--pill-radius) - 17px);          /* 左側 34px icon 圓心對齊 */
+  --icon-right-offset: calc(var(--pill-radius) - 19px);         /* 右側 38px icon 圓心對齊 */
+  --icon-right-sm-offset: calc(var(--pill-radius) - 14px);      /* 右側 28px icon 圓心對齊 */
 
   /* S4 流體效果控制變數 */
   --s4-blur: 35px;
@@ -38,7 +41,7 @@ html, body {
 /* Script 名稱標示（大膠囊正上方，與膠囊 top 同步） */
 .script-label {
   position: fixed;
-  top: calc(43% - var(--pill-height) / 2 - 80px);
+  top: calc(43% - var(--pill-height) / 2 - 100px);
   left: 50%;
   transform: translateX(-50%);
   font-size: 60px;
@@ -223,6 +226,27 @@ html, body {
 /* 第二頁膠囊內容佈局 */
 [id$="-pill-page-2"] {
   gap: 12px;
+  position: relative;
+}
+
+/* S1 第二頁 icon 絕對定位對齊半圓圓心 */
+#s1-pill-page-2 .ai-icon-wrapper {
+  position: absolute;
+  left: var(--icon-left-offset);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#s1-pill-page-2 .mic-icon-wrapper {
+  position: absolute;
+  right: var(--icon-right-sm-offset);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#s1-pill-page-2 .chat-text-wrapper {
+  margin-left: 38px;
+  margin-right: 32px;
 }
 
 /* 左側 AI 星形 icon */
@@ -338,7 +362,7 @@ html, body {
 /* 第三頁 AI icon 保持顯示，絕對定位在左半圓圓心 */
 [id$="-pill-page-3"] .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -468,7 +492,7 @@ html, body {
 /* S1 第四頁 AI icon 固定在左側（中心=大膠囊左半圓圓心） */
 #s1-pill-page-4 .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -571,7 +595,7 @@ html, body {
 /* S2 第二頁 AI icon 絕對定位在左半圓圓心（同 S1 第三頁） */
 #s2-pill-page-2 .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -627,10 +651,10 @@ html, body {
   padding: 0 12px;
 }
 
-/* Gmail icon 圓底 — 絕對定位在右側（與左側 AI icon left:11px 對稱） */
+/* Gmail icon 圓底 — 絕對定位在右半圓圓心 */
 .gmail-circle {
   position: absolute;
-  right: var(--pill-padding);
+  right: var(--icon-right-offset);
   top: 50%;
   transform: translateY(-50%);
   width: 38px;
@@ -664,10 +688,10 @@ html, body {
   font-weight: 700;
 }
 
-/* 行事曆 icon 圓底 — 絕對定位在右側（與左側 AI icon left:11px 對稱） */
+/* 行事曆 icon 圓底 — 絕對定位在右半圓圓心 */
 .calendar-circle {
   position: absolute;
-  right: var(--pill-padding);
+  right: var(--icon-right-offset);
   top: 50%;
   transform: translateY(-50%);
   width: 38px;
@@ -699,7 +723,7 @@ html, body {
 
 #s2-pill-page-4 .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -710,10 +734,10 @@ html, body {
   margin-right: 47px;
 }
 
-/* S2 第四頁右側 icon 插槽（絕對定位，與第三頁行事曆位置一致） */
+/* S2 第四頁右側 icon 插槽（絕對定位，與右半圓圓心一致） */
 .s2-p4-icon-slot {
   position: absolute;
-  right: var(--pill-padding);
+  right: var(--icon-right-offset);
   top: 50%;
   transform: translateY(-50%);
   width: 38px;
@@ -765,7 +789,7 @@ html, body {
 
 #s2-pill-page-5 .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -802,10 +826,10 @@ html, body {
   opacity: 0;
 }
 
-/* 第五頁 icon slot（絕對定位，與第三、四頁右側 icon 位置一致） */
+/* 第五頁 icon slot（絕對定位，與右半圓圓心一致） */
 .s2-p5-icon-slot {
   position: absolute;
-  right: var(--pill-padding);
+  right: var(--icon-right-offset);
   top: 50%;
   transform: translateY(-50%);
   width: 38px;
@@ -833,7 +857,7 @@ html, body {
 
 #s3-pill-page-2 .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
@@ -1159,7 +1183,7 @@ html, body {
 /* S3 第三頁 AI icon 固定在左側 */
 #s3-pill-page-3 .ai-icon-wrapper {
   position: absolute;
-  left: var(--pill-padding);
+  left: var(--icon-left-offset);
   top: 50%;
   transform: translateY(-50%);
 }
@@ -1335,7 +1359,7 @@ html, body {
    ======================================== */
 .prompter {
   position: fixed;
-  top: calc(50% + var(--pill-height) / 2 + 24px);
+  top: calc(43% + var(--pill-height) / 2 + 30px);
   left: 50%;
   transform: translateX(-50%);
   font-size: 24px;
