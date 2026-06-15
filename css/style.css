@@ -1,7 +1,7 @@
 /* 大膠囊設計參數（來自 PPT：1.39cm × 15.52cm，背景 19.05cm × 33.87cm） */
 :root {
-  --pill-height: 53px;
-  --pill-ratio: 11.12;                                       /* 寬度 ≈ 589px */
+  --pill-height: 54px;
+  --pill-ratio: 10.9;                                        /* 寬度 ≈ 589px */
   --pill-width: calc(var(--pill-height) * var(--pill-ratio));  /* ≈ 558px */
   --pill-radius: calc(var(--pill-height) / 2);                 /* 25px */
   --pill-padding: calc(var(--pill-radius) - 15px);             /* 通用內距 */
